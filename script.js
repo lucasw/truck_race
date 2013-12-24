@@ -5,8 +5,11 @@ var KEYCODE_DOWN = 40;
 var KEYCODE_LEFT = 37;  
 var KEYCODE_RIGHT = 39;        
 
-var px = 100;
 var py = 100;
+
+var min_px = 128;
+var max_px = 512;
+var px = min_px;
 
 var stage;
 var wd;
@@ -63,20 +66,7 @@ function updateTruck() {
 
   truck_all.x = px;
   truck_all.y = py;
-  /*
-  truck["rim_wheel_left"].x = px - 50;
-  truck["rim_wheel_left"].y = py + 50;
-  truck["wheel_left"].x = px - 50;
-  truck["wheel_left"].y = py + 50;
-  
-  truck["rim_wheel_right"].x = px + 50;
-  truck["rim_wheel_right"].y = py + 50;
-  truck["wheel_right"].x = px + 50;
-  truck["wheel_right"].y = py + 50;
-  
-  truck["cab"].x = px;
-  truck["cab"].y = py;
-*/
+
 }
 
 var loader;
@@ -110,10 +100,11 @@ function handleComplete() {
   //mud_img.scaleX = 4;
   //mud_img.scaleY = 4;
   mud = new createjs.Shape();
-  mud.graphics.beginBitmapFill(mud_img).drawRect(0, 0, wd/scale, ht/scale);
+  mud.graphics.beginBitmapFill(mud_img).drawRect(0, 0, //-mud_img.width*scale, 0, 
+      wd/scale + mud_img.width*scale, ht/scale);
   mud.scaleX = scale;
   mud.scaleY = scale;
-  mud.tileW = mud_img.width;
+  mud.tileW = mud_img.width * scale;
   stage.addChild(mud); 
   
   makeTruck();
@@ -126,17 +117,32 @@ function handleComplete() {
 }
 
 function tick(event) {
-
+  if (px > max_px) {
+    px = max_px;
+  }
+  if (px < min_px) {
+    px = min_px;
+  }
+  if (py < 0) {
+    py = 0;
+  }
+  if (py > ht) {
+    py = ht;
+  }
   updateTruck();
+  
+  var deltaS = event.delta/1000;
+  mud.x = (mud.x - (px - min_px)/(scale*4)) % mud.tileW;// (mud.x - deltaS* (px - min_px)) & mud.tileW;
 
   stage.update(event);
 }
+
 
 function handleKeyDown(e) {
   // cross browse issue?
   if (!e) { var e = window.event; }
 
-  var step = 3;
+  var step = scale;
   switch (e.keyCode) {
     case KEYCODE_LEFT:
       px -= step;
@@ -153,5 +159,6 @@ function handleKeyDown(e) {
 
 
   }
-  
+ 
+
 }
