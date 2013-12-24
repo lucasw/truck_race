@@ -86,7 +86,12 @@ function init() {
 
   wd = stage.canvas.width;
   ht = stage.canvas.height;
-  
+
+  var context = stage.canvas.getContext("2d");
+  context.imageSmoothingEnabled = false;
+  context.mozImageSmoothingEnabled = false;
+  context.webkitImageSmoothingEnabled = false;
+
   manifest = [
     {src:"assets/mud.png", id:"mud"}
   ];
@@ -96,12 +101,18 @@ function init() {
   loader.loadManifest(manifest);
 }
 
+var scale = 4;
+
 function handleComplete() {
   
 
   mud_img = loader.getResult("mud");
+  //mud_img.scaleX = 4;
+  //mud_img.scaleY = 4;
   mud = new createjs.Shape();
-  mud.graphics.beginBitmapFill(mud_img).drawRect(0, 0, wd, ht);
+  mud.graphics.beginBitmapFill(mud_img).drawRect(0, 0, wd/scale, ht/scale);
+  mud.scaleX = scale;
+  mud.scaleY = scale;
   mud.tileW = mud_img.width;
   stage.addChild(mud); 
   
