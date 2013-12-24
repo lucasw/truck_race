@@ -28,7 +28,9 @@ var mud_img;
 var truck_all;
 //var truck = {};
 var truck;
-
+var wheel1;
+var wheel2;
+var axle1;
 var manifest;
 
 document.onkeydown = handleKeyDown;
@@ -99,18 +101,31 @@ function makeTruck() {
   truck.scaleY = scale;
   truck_all.addChild(truck);
 
-  var wheel1 = new createjs.Bitmap(loader.getResult("wheel"));
+  axle1 = new createjs.Container();
+  axle1.x = 24;
+  axle1.y = 128;
+  truck_all.addChild(axle1);
+  
+  wheel1 = new createjs.Bitmap(loader.getResult("wheel"));
+  //var wheel_wd = wheel1.width;
   wheel1.scaleX = scale;
   wheel1.scaleY = scale;
-  wheel1.y = 108;
-  truck_all.addChild(wheel1);
+  wheel1.regX = 12;
+  wheel1.regY = wheel1.regX;
+  //wheel1.regY = wheel_wd/2;
+  axle1.addChild(wheel1);
 
-  var wheel2 = new createjs.Bitmap(loader.getResult("wheel"));
+  var axle2 = new createjs.Container();
+  axle2.x = 106;
+  axle2.y = axle1.y;
+  truck_all.addChild(axle2);
+
+  wheel2 = new createjs.Bitmap(loader.getResult("wheel"));
   wheel2.scaleX = scale;
   wheel2.scaleY = scale;
-  wheel2.x = 84;
-  wheel2.y = 108;
-  truck_all.addChild(wheel2);
+  wheel2.regX = wheel1.regX;
+  wheel2.regY = wheel2.regX;
+  axle2.addChild(wheel2);
 
 
 }
@@ -185,6 +200,9 @@ function tick(event) {
   }
   pos_x += vel;
 
+  wheel1.rotation = pos_x; //setTransform(0,0, scale, scale, pos_x); 
+  wheel2.rotation = pos_x; //setTransform(0,0, scale, scale, pos_x); 
+ 
   //var scaled_vel = vel * scale * 6;
   //px += ((px - min_px) - scaled_vel)/16;
   py += vel_y;
