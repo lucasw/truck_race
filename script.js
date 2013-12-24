@@ -10,44 +10,53 @@ var py = 100;
 
 var stage;
 
+var truck_all;
 var truck = {};
 
 document.onkeydown = handleKeyDown;
 
-function makeWheel(name) {
+function makeWheel(name, x) {
 
   var radius = 30;
   var tire_color = "#111111";
   truck[name] = new createjs.Shape();
   truck[name].graphics.beginFill(tire_color).drawCircle(0, 0, radius);
-  stage.addChild(truck[name]);
+  truck[name].x = x;
+  truck[name].y = 50;
+  truck_all.addChild(truck[name]);
   
   var hubcap_color = "#999999";
   truck["rim_" + name] = new createjs.Shape();
   truck["rim_" + name].graphics.beginFill(hubcap_color).drawCircle(0, 0, 
       radius - 10);
-  stage.addChild(truck["rim_" + name]);
+  truck["rim_" + name].x = x;
+  truck["rim_" + name].y = 50;
+  truck_all.addChild(truck["rim_" + name]);
 }
 
 function makeTruck() {
   
+  truck_all = new createjs.Container();
+  stage.addChild(truck_all);
+
   var body_color = "#11d011";
   truck["body"] = new createjs.Shape();
   truck["body"].graphics.beginFill(body_color).drawRect(-100, -30, 200, 60);
-  stage.addChild(truck["body"]);
+  truck_all.addChild(truck["body"]);
   truck["cab"] = new createjs.Shape();
   truck["cab"].graphics.beginFill(body_color).drawRect(-10, -70, 70, 50);
-  stage.addChild(truck["cab"]);
+  truck_all.addChild(truck["cab"]);
   
-  //truck["wheel_left"] = 
-  makeWheel("wheel_left");
-  makeWheel("wheel_right");
-
+  makeWheel("wheel_left", -50);
+  makeWheel("wheel_right", 50);
 
 }
 
 function updateTruck() {
 
+  truck_all.x = px;
+  truck_all.y = py;
+  /*
   truck["rim_wheel_left"].x = px - 50;
   truck["rim_wheel_left"].y = py + 50;
   truck["wheel_left"].x = px - 50;
@@ -58,10 +67,9 @@ function updateTruck() {
   truck["wheel_right"].x = px + 50;
   truck["wheel_right"].y = py + 50;
   
-  truck["body"].x = px;
-  truck["body"].y = py;
   truck["cab"].x = px;
   truck["cab"].y = py;
+*/
 }
 
 function init() {
