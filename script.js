@@ -79,16 +79,17 @@ function makeTruck() {
   stage.addChild(truck_all);
   
 
-  var shadow = new createjs.Bitmap(loader.getResult("shadow"));
-  shadow.scaleX = scale;
-  shadow.scaleY = scale;
-  shadow.y = 96;
-  truck_all.addChild(shadow);
+  var shadow1 = new createjs.Bitmap(loader.getResult("shadow"));
+  shadow1.scaleX = scale;
+  shadow1.scaleY = scale;
+  shadow1.x = 32 * scale;
+  shadow1.y = 96;
+  truck_all.addChild(shadow1);
 
   var shadow2 = new createjs.Bitmap(loader.getResult("shadow"));
   shadow2.scaleX = scale;
   shadow2.scaleY = scale;
-  shadow2.x = shadow.width * scale;
+  shadow2.x = 0;
   shadow2.y = 96;
   truck_all.addChild(shadow2);
 
