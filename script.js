@@ -27,6 +27,7 @@ var mud_img;
 
 var truck_all;
 var truck = {};
+var shadow;
 
 var manifest;
 
@@ -53,8 +54,12 @@ function makeWheel(name, x) {
 
 function makeTruck() {
   
+  
   truck_all = new createjs.Container();
   stage.addChild(truck_all);
+  
+  shadow = new createjs.Bitmap(loader.getResult("shadow"));
+  truck_all.addChild(shadow);
 
   var body_color = "#11d011";
   truck["body"] = new createjs.Shape();
@@ -90,7 +95,8 @@ function init() {
   context.webkitImageSmoothingEnabled = false;
 
   manifest = [
-    {src:"assets/mud.png", id:"mud"}
+    {src:"assets/mud.png", id:"mud"},
+    {src:"assets/shadow.png", id:"shadow"}
   ];
 
   loader = new createjs.LoadQueue(false);
@@ -112,7 +118,8 @@ function handleComplete() {
   mud.scaleY = scale;
   mud.tileW = mud_img.width * scale;
   stage.addChild(mud); 
-  
+
+
   makeTruck();
   updateTruck();
 
