@@ -11,6 +11,9 @@ var min_px = 128;
 var max_px = 512;
 var px = min_px;
 
+var pos_x = 0;
+var vel = 0;
+
 var stage;
 var wd;
 var ht;
@@ -116,13 +119,29 @@ function handleComplete() {
   createjs.Ticker.setFPS(15);
 }
 
+var pvel = 0;
+var level_x = 0;
+
 function tick(event) {
+  /*
   if (px > max_px) {
     px = max_px;
   }
   if (px < min_px) {
     px = min_px;
   }
+  */
+  if (vel < 0) {
+    vel = 0;
+  }
+  if (vel > 20) {
+    vel = 20;
+  }
+  pos_x += vel;
+
+  //var scaled_vel = vel * scale * 6;
+  //px += ((px - min_px) - scaled_vel)/16;
+
   if (py < 0) {
     py = 0;
   }
@@ -130,9 +149,19 @@ function tick(event) {
     py = ht;
   }
   updateTruck();
-  
-  var deltaS = event.delta/1000;
-  mud.x = (mud.x - (px - min_px)/(scale*4)) % mud.tileW;// (mud.x - deltaS* (px - min_px)) & mud.tileW;
+ 
+  // make the truck move to x in screen coordinates as it speeds up
+  // This doesn't allow the vehicle to ever overtake the furthest
+  // forward position in x onscreen before level catches up
+  var mix = 0.04;
+  pvel = vel * mix + pvel * (1.0 - mix); 
+  level_x += pvel;
+  px = (pos_x - level_x) + min_px;
+
+  //var deltaS = event.delta/1000;
+  // dithered textures produce strobing effect at right velocities
+  //mud.x = Math.round( ((mud.x - vel) % mud.tileW) / scale) * scale;// (mud.x - deltaS* (px - min_px)) & mud.tileW;
+  mud.x = ( ((mud.x - pvel) % mud.tileW));// (mud.x - deltaS* (px - min_px)) & mud.tileW;
 
   stage.update(event);
 }
@@ -145,10 +174,10 @@ function handleKeyDown(e) {
   var step = scale;
   switch (e.keyCode) {
     case KEYCODE_LEFT:
-      px -= step;
+      vel -= 1;
       return false;
     case KEYCODE_RIGHT:
-      px += step;
+      vel += 1;
       return false;
    case KEYCODE_UP:
       py -= step;
