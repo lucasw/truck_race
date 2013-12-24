@@ -5,7 +5,9 @@ var KEYCODE_DOWN = 40;
 var KEYCODE_LEFT = 37;  
 var KEYCODE_RIGHT = 39;        
 
-var py = 100;
+var scale = 2;
+
+var py = 128;
 
 var min_px = 128;
 var max_px = 512;
@@ -13,6 +15,8 @@ var px = min_px;
 
 var pos_x = 0;
 var vel = 0;
+var vel_y = 0;
+var max_vel_y = scale * 4;
 
 var stage;
 var wd;
@@ -94,7 +98,6 @@ function init() {
   loader.loadManifest(manifest);
 }
 
-var scale = 4;
 
 function handleComplete() {
   
@@ -123,14 +126,7 @@ var pvel = 0;
 var level_x = 0;
 
 function tick(event) {
-  /*
-  if (px > max_px) {
-    px = max_px;
-  }
-  if (px < min_px) {
-    px = min_px;
-  }
-  */
+
   if (vel < 0) {
     vel = 0;
   }
@@ -141,6 +137,12 @@ function tick(event) {
 
   //var scaled_vel = vel * scale * 6;
   //px += ((px - min_px) - scaled_vel)/16;
+  py += vel_y;
+  py = Math.round(py/scale) * scale;
+
+  if (Math.round(py/max_vel_y) % (mud_img.height * scale/max_vel_y) == 0) {
+    vel_y = 0;
+  }
 
   if (py < 0) {
     py = 0;
@@ -180,13 +182,11 @@ function handleKeyDown(e) {
       vel += 1;
       return false;
    case KEYCODE_UP:
-      py -= step;
+      vel_y = -max_vel_y;
       return false;
    case KEYCODE_DOWN:
-      py += step;
+      vel_y = max_vel_y;
       return false;
-
-
   }
  
 
