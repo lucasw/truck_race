@@ -9,9 +9,16 @@ var px = 100;
 var py = 100;
 
 var stage;
+var wd;
+var ht;
+
+var mud;
+var mud_img;
 
 var truck_all;
 var truck = {};
+
+var manifest;
 
 document.onkeydown = handleKeyDown;
 
@@ -72,8 +79,32 @@ function updateTruck() {
 */
 }
 
+var loader;
+
 function init() {
   stage = new createjs.Stage("truck_race");
+
+  wd = stage.canvas.width;
+  ht = stage.canvas.height;
+  
+  manifest = [
+    {src:"assets/mud.png", id:"mud"}
+  ];
+
+  loader = new createjs.LoadQueue(false);
+  loader.addEventListener("complete", handleComplete);
+  loader.loadManifest(manifest);
+}
+
+function handleComplete() {
+  
+
+  mud_img = loader.getResult("mud");
+  mud = new createjs.Shape();
+  mud.graphics.beginBitmapFill(mud_img).drawRect(0, 0, wd, ht);
+  mud.tileW = mud_img.width;
+  stage.addChild(mud); 
+  
   makeTruck();
   updateTruck();
 
