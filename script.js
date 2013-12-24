@@ -26,15 +26,15 @@ var mud;
 var mud_img;
 
 var truck_all;
-var truck = {};
-var shadow;
+//var truck = {};
+var truck;
 
 var manifest;
 
 document.onkeydown = handleKeyDown;
 
+/*
 function makeWheel(name, x) {
-
   var radius = 30;
   var tire_color = "#111111";
   truck[name] = new createjs.Shape();
@@ -53,8 +53,6 @@ function makeWheel(name, x) {
 }
 
 function makeTruck() {
-  
-  
   truck_all = new createjs.Container();
   stage.addChild(truck_all);
   
@@ -71,6 +69,40 @@ function makeTruck() {
   
   makeWheel("wheel_left", -50);
   makeWheel("wheel_right", 50);
+
+}
+*/
+
+function makeTruck() {
+
+  truck_all = new createjs.Container();
+  stage.addChild(truck_all);
+  
+
+  var shadow = new createjs.Bitmap(loader.getResult("shadow"));
+  shadow.scaleX = scale;
+  shadow.scaleY = scale;
+  shadow.y = 96;
+  truck_all.addChild(shadow);
+
+  var shadow2 = new createjs.Bitmap(loader.getResult("shadow"));
+  shadow2.scaleX = scale;
+  shadow2.scaleY = scale;
+  shadow2.x = shadow.width * scale;
+  shadow2.y = 96;
+  truck_all.addChild(shadow2);
+
+
+  truck = new createjs.Bitmap(loader.getResult("truck"));
+  truck.scaleX = scale;
+  truck.scaleY = scale;
+  truck_all.addChild(truck);
+
+  var wheel1 = new createjs.Bitmap(loader.getResult("wheel"));
+  wheel1.scaleX = scale;
+  wheel1.scaleY = scale;
+  wheel1.y = 108;
+  truck_all.addChild(wheel1);
 
 }
 
@@ -96,7 +128,9 @@ function init() {
 
   manifest = [
     {src:"assets/mud.png", id:"mud"},
-    {src:"assets/shadow.png", id:"shadow"}
+    {src:"assets/truck.png", id:"truck"},
+    {src:"assets/shadow.png", id:"shadow"},
+    {src:"assets/wheel.png", id:"wheel"}
   ];
 
   loader = new createjs.LoadQueue(false);
