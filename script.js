@@ -104,6 +104,14 @@ function makeTruck() {
   wheel1.y = 108;
   truck_all.addChild(wheel1);
 
+  var wheel2 = new createjs.Bitmap(loader.getResult("wheel"));
+  wheel2.scaleX = scale;
+  wheel2.scaleY = scale;
+  wheel2.x = 84;
+  wheel2.y = 108;
+  truck_all.addChild(wheel2);
+
+
 }
 
 function updateTruck() {
