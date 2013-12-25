@@ -1,4 +1,5 @@
-
+// Copyright Lucas Walter 2013
+// GNU GPL 3.0
 
 var KEYCODE_UP = 38;                
 var KEYCODE_DOWN = 40;                
@@ -7,31 +8,34 @@ var KEYCODE_RIGHT = 39;
 
 var scale = 2;
 
-var py = 128;
-
-var min_px = 128;
-var max_px = 512;
-var px = min_px;
-
-var pos_x = 0;
-var vel = 0;
-var vel_y = 0;
-var max_vel_y = scale * 4;
-
 var stage;
 var wd;
 var ht;
 
+var manifest;
+
+// level, TODO encapsulate
 var mud;
 var mud_img;
+var ramp;
 
+var py = 128;
+var min_px = 128;
+var max_px = 512;
+var px = min_px;
+
+/// truck, TODO encapsulate
 var truck_all;
 //var truck = {};
 var truck;
 var wheel1;
 var wheel2;
 var axle1;
-var manifest;
+
+var pos_x = 0;
+var vel = 0;
+var vel_y = 0;
+var max_vel_y = scale * 4;
 
 document.onkeydown = handleKeyDown;
 
@@ -80,7 +84,6 @@ function makeTruck() {
   truck_all = new createjs.Container();
   stage.addChild(truck_all);
   
-
   var shadow1 = new createjs.Bitmap(loader.getResult("shadow"));
   shadow1.scaleX = scale;
   shadow1.scaleY = scale;
@@ -154,7 +157,8 @@ function init() {
     {src:"assets/mud.png", id:"mud"},
     {src:"assets/truck.png", id:"truck"},
     {src:"assets/shadow.png", id:"shadow"},
-    {src:"assets/wheel.png", id:"wheel"}
+    {src:"assets/wheel.png", id:"wheel"},
+    {src:"assets/ramp.png", id:"ramp"}
   ];
 
   loader = new createjs.LoadQueue(false);
@@ -162,10 +166,9 @@ function init() {
   loader.loadManifest(manifest);
 }
 
+var level = {};
 
-function handleComplete() {
-  
-
+function makeLevel() {
   mud_img = loader.getResult("mud");
   //mud_img.scaleX = 4;
   //mud_img.scaleY = 4;
@@ -177,6 +180,41 @@ function handleComplete() {
   mud.tileW = mud_img.width * scale;
   stage.addChild(mud); 
 
+  level.features = [];
+
+  // TODO instead load a bitmap or text file that specifies where features are
+  for (var i = 0; i < 30; i++) {
+    var jump = new createjs.Bitmap(loader.getResult("ramp"));
+    jump.scaleX = scale;
+    jump.scaleY = scale;
+    // place off-screen for now
+    jump.x = - mud.tileW * 2;
+    jump.y = level.features.y * mud.tileW;
+    level.features.push( { img: jump, x: i * 5, y: i % 5 } );
+  }
+}
+
+function levelDraw() {
+  // make the truck move to x in screen coordinates as it speeds up
+  // This doesn't allow the vehicle to ever overtake the furthest
+  // forward position in x onscreen before level catches up
+  var mix = 0.04;
+  pvel = vel * mix + pvel * (1.0 - mix); 
+  level_x += pvel;
+  px = (pos_x - level_x) + min_px;
+
+  //var deltaS = event.delta/1000;
+  // dithered textures produce strobing effect at right velocities
+  //mud.x = Math.round( ((mud.x - vel) % mud.tileW) / scale) * scale;// (mud.x - deltaS* (px - min_px)) & mud.tileW;
+  mud.x = ( ((mud.x - pvel) % mud.tileW));// (mud.x - deltaS* (px - min_px)) & mud.tileW;
+
+  for (var i = 0; i < level.features.length; i++) {
+    level.features[i].img.x = level.features[i].x * mud.tileW - level_x;
+  }
+}
+
+function handleComplete() {
+  makeLevel();  
 
   makeTruck();
   updateTruck();
@@ -198,10 +236,14 @@ function tick(event) {
   if (vel > 20) {
     vel = 20;
   }
+  vel *= 0.96;
   pos_x += vel;
 
-  wheel1.rotation = pos_x; //setTransform(0,0, scale, scale, pos_x); 
-  wheel2.rotation = pos_x; //setTransform(0,0, scale, scale, pos_x); 
+  // TODO use wheel diameter (24 pixels, or get bounds)
+  // pi*d * rotation/(2*pi) = pos_x
+  // rotation = pos_x * 2 / d ?
+  wheel1.rotation = pos_x * 2.5; //setTransform(0,0, scale, scale, pos_x); 
+  wheel2.rotation = pos_x * 2.5; //setTransform(0,0, scale, scale, pos_x); 
  
   //var scaled_vel = vel * scale * 6;
   //px += ((px - min_px) - scaled_vel)/16;
@@ -219,19 +261,8 @@ function tick(event) {
     py = ht;
   }
   updateTruck();
- 
-  // make the truck move to x in screen coordinates as it speeds up
-  // This doesn't allow the vehicle to ever overtake the furthest
-  // forward position in x onscreen before level catches up
-  var mix = 0.04;
-  pvel = vel * mix + pvel * (1.0 - mix); 
-  level_x += pvel;
-  px = (pos_x - level_x) + min_px;
 
-  //var deltaS = event.delta/1000;
-  // dithered textures produce strobing effect at right velocities
-  //mud.x = Math.round( ((mud.x - vel) % mud.tileW) / scale) * scale;// (mud.x - deltaS* (px - min_px)) & mud.tileW;
-  mud.x = ( ((mud.x - pvel) % mud.tileW));// (mud.x - deltaS* (px - min_px)) & mud.tileW;
+  levelDraw();
 
   stage.update(event);
 }
