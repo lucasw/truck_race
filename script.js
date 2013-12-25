@@ -130,10 +130,39 @@ function makeTruck() {
   wheel2.regY = wheel2.regX;
   axle2.addChild(wheel2);
 
-
 }
 
 function updateTruck() {
+  if (vel < 0) {
+    vel = 0;
+  }
+  if (vel > 20) {
+    vel = 20;
+  }
+  vel *= 0.96;
+  pos_x += vel;
+
+  // TODO use wheel diameter (24 pixels, or get bounds)
+  // pi*d * rotation/(2*pi) = pos_x
+  // rotation = pos_x * 2 / d ?
+  wheel1.rotation = pos_x * 2.5; //setTransform(0,0, scale, scale, pos_x); 
+  wheel2.rotation = pos_x * 2.5; //setTransform(0,0, scale, scale, pos_x); 
+ 
+  //var scaled_vel = vel * scale * 6;
+  //px += ((px - min_px) - scaled_vel)/16;
+  py += vel_y;
+  py = Math.round(py/scale) * scale;
+
+  if (Math.round(py/max_vel_y) % (mud_img.height * scale/max_vel_y) == 0) {
+    vel_y = 0;
+  }
+
+  if (py < 0) {
+    py = 0;
+  }
+  if (py > ht) {
+    py = ht;
+  }
 
   truck_all.x = px;
   truck_all.y = py;
@@ -230,39 +259,10 @@ var level_x = 0;
 
 function tick(event) {
 
-  if (vel < 0) {
-    vel = 0;
-  }
-  if (vel > 20) {
-    vel = 20;
-  }
-  vel *= 0.96;
-  pos_x += vel;
-
-  // TODO use wheel diameter (24 pixels, or get bounds)
-  // pi*d * rotation/(2*pi) = pos_x
-  // rotation = pos_x * 2 / d ?
-  wheel1.rotation = pos_x * 2.5; //setTransform(0,0, scale, scale, pos_x); 
-  wheel2.rotation = pos_x * 2.5; //setTransform(0,0, scale, scale, pos_x); 
- 
-  //var scaled_vel = vel * scale * 6;
-  //px += ((px - min_px) - scaled_vel)/16;
-  py += vel_y;
-  py = Math.round(py/scale) * scale;
-
-  if (Math.round(py/max_vel_y) % (mud_img.height * scale/max_vel_y) == 0) {
-    vel_y = 0;
-  }
-
-  if (py < 0) {
-    py = 0;
-  }
-  if (py > ht) {
-    py = ht;
-  }
-  updateTruck();
 
   levelDraw();
+  
+  updateTruck();
 
   stage.update(event);
 }
