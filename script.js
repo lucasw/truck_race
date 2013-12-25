@@ -218,8 +218,9 @@ function makeLevel() {
     jump.scaleY = scale;
     // place off-screen for now
     jump.x = - mud.tileW * 2;
-    jump.y = level.features.y * mud.tileW;
     level.features.push( { img: jump, x: i * 5, y: i % 5 } );
+    jump.y = level.features[i].y * mud.tileW;
+    stage.addChild(jump);
   }
 }
 
@@ -259,10 +260,8 @@ var level_x = 0;
 
 function tick(event) {
 
-
-  levelDraw();
-  
   updateTruck();
+  levelDraw();
 
   stage.update(event);
 }
