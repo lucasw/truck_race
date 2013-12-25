@@ -243,10 +243,15 @@ function levelDraw() {
   }
 }
 
+var scene_graph;
+
 function handleComplete() {
   makeLevel();  
 
+  scene_graph = new createjs.Container();
+  
   makeTruck();
+
   updateTruck();
 
   stage.update();
