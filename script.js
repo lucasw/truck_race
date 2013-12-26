@@ -41,6 +41,7 @@ var axle1;
 var axle2;
 
 var pos_x = 0;
+var pos_y = 0;
 
 var vel_x = 0;
 var vel_y = 0;
@@ -141,20 +142,24 @@ this.update = function() {
  
   //var scaled_vel = vel * scale * 6;
   //px += ((px - min_px) - scaled_vel)/16;
-  py += vel_y;
-  py = Math.round(py/scale) * scale;
+  pos_y += vel_y;
+  pos_y = Math.round(pos_y/scale) * scale;
 
-  if (Math.round(py/max_vel_y) % (mud_img.height * scale/max_vel_y) == 0) {
+  // complete turn when in new lane
+  if (Math.round(pos_y/max_vel_y) % (mud.tileW/2 * scale/max_vel_y) == 0) {
     vel_y = 0;
   }
 
-  if (py < 0) {
-    py = 0;
+  if (pos_y < 0) {
+    pos_y = 0;
   }
-  if (py > ht) {
-    py = ht;
+  if (pos_y > ht - mud.tileW * 3) {
+    pos_y = ht - mud.tileW * 3;
   }
+  
+  py = pos_y;
 
+  // px is determined by the level update
   truck_all.x = px;
   truck_all.y = py;
 
