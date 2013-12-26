@@ -37,6 +37,19 @@ var ramp;
 var level_x = 0;
 var features;
 
+this.getHeight = function(t_x, t_y) {
+  var x = Math.round(t_x / tile_size); 
+  var y = Math.round(t_y / tile_size);
+  console.log("pos " + x + " " + y);
+  for (var i = 0; i < features.length; i++) {
+    if ((x === features[i].x) && (y === features[i].y)) {
+      return 1;
+    }
+  }
+
+  return 0;
+}
+
 this.init = function() {
   mud_img = loader.getResult("mud");
   //mud_img.scaleX = 4;
@@ -118,7 +131,7 @@ var off_ground = false;
 this.jump = function() {
   if (!off_ground) {
     //console.log("jump");
-    vel_z = 2 * scale;
+    vel_z = 3 * scale;
     off_ground = true;
   }
 }
@@ -251,7 +264,10 @@ this.update = function() {
   }
   
   py = pos_y;
-
+    
+  if (!off_ground && (level.getHeight(pos_x - tile_size, pos_y) > 0)) {
+    this.jump();
+  }
   // px is determined by the level update
   truck_all.x = px;
   truck_all.y = py;
