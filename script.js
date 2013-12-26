@@ -1,6 +1,7 @@
 // Copyright Lucas Walter 2013
 // GNU GPL 3.0
 
+var KEYCODE_CTRL = 74;
 var KEYCODE_UP = 38;                
 var KEYCODE_DOWN = 40;                
 var KEYCODE_LEFT = 37;  
@@ -33,7 +34,11 @@ var truck;
 
 function Truck() {
 
+// includes the shadow
 var truck_all;
+// just the physical truck
+var truck_body;
+
 var truck;
 var wheel1;
 var wheel2;
@@ -42,10 +47,23 @@ var axle2;
 
 var pos_x = 0;
 var pos_y = 0;
+// how high in air or on ramp
+var pos_z = 0;
 
 var vel_x = 0;
 var vel_y = 0;
+var vel_z = 0;
 var max_vel_y = scale * 4;
+
+var off_ground = false;
+
+this.jump = function() {
+  if (!off_ground) {
+    console.log("jump");
+    vel_z = 2 * scale;
+    off_ground = true;
+  }
+}
 
 this.getVel = function() {
   return vel_x;
@@ -91,15 +109,18 @@ this.init = function() {
   truck_all.addChild(shadow2);
 
 
+  truck_body = new createjs.Container();
+  truck_all.addChild(truck_body);
+  
   truck = new createjs.Bitmap(loader.getResult("truck"));
   truck.scaleX = scale;
   truck.scaleY = scale;
-  truck_all.addChild(truck);
+  truck_body.addChild(truck);
 
   axle1 = new createjs.Container();
   axle1.x = 24;
   axle1.y = 128;
-  truck_all.addChild(axle1);
+  truck_body.addChild(axle1);
   
   wheel1 = new createjs.Bitmap(loader.getResult("wheel"));
   //var wheel_wd = wheel1.width;
@@ -113,7 +134,7 @@ this.init = function() {
   var axle2 = new createjs.Container();
   axle2.x = 106;
   axle2.y = axle1.y;
-  truck_all.addChild(axle2);
+  truck_body.addChild(axle2);
 
   wheel2 = new createjs.Bitmap(loader.getResult("wheel"));
   wheel2.scaleX = scale;
@@ -124,7 +145,9 @@ this.init = function() {
 
 } // init
 
+
 this.update = function() {
+  
   if (vel_x < 0) {
     vel_x = 0;
   }
@@ -134,14 +157,26 @@ this.update = function() {
   vel_x *= 0.98;
   pos_x += vel_x;
 
+  pos_z += vel_z;
+  if (pos_z < 0) {
+    //if (vel_z < 0) {
+    //  vel_z = -Math.round(vel_z/2);
+    //}
+    vel_z = 0;
+    pos_z = 0;
+    off_ground = false;
+  }
+  if (off_ground) {
+    vel_z -= 0.16 * scale;
+    //console.log(vel_z + " " + pos_z);
+  }
+
   // TODO use wheel diameter (24 pixels, or get bounds)
   // pi*d * rotation/(2*pi) = pos_x
   // rotation = pos_x * 2 / d ?
   wheel1.rotation = pos_x * 2.5; //setTransform(0,0, scale, scale, pos_x); 
   wheel2.rotation = pos_x * 2.5; //setTransform(0,0, scale, scale, pos_x); 
  
-  //var scaled_vel = vel * scale * 6;
-  //px += ((px - min_px) - scaled_vel)/16;
   pos_y += vel_y;
   pos_y = Math.round(pos_y/scale) * scale;
 
@@ -162,6 +197,8 @@ this.update = function() {
   // px is determined by the level update
   truck_all.x = px;
   truck_all.y = py;
+
+  truck_body.y = -pos_z;
 
 } // update
 
@@ -274,6 +311,9 @@ function handleKeyDown(e) {
 
   var step = scale;
   switch (e.keyCode) {
+    case KEYCODE_CTRL:
+      truck.jump();
+      return false;
     case KEYCODE_LEFT:
       truck.brake()
       return false;
