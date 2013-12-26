@@ -13,22 +13,80 @@ var stage;
 var wd;
 var ht;
 
+var tile_size;
+
 var manifest;
 
+document.onkeydown = handleKeyDown;
+
+// position of the player on screen, belongs in special object?
+var px = min_px;
+var py = 128;
+var min_px = 128;
+var max_px = 512;
+var pvel = 0;
+
+function Level() {
+
+//var level = {};
 // level, TODO encapsulate
 var mud;
 var mud_img;
 var ramp;
 
-var py = 128;
-var min_px = 128;
-var max_px = 512;
-var px = min_px;
-
-var pvel = 0;
 var level_x = 0;
+var features;
 
-document.onkeydown = handleKeyDown;
+this.init = function() {
+  mud_img = loader.getResult("mud");
+  //mud_img.scaleX = 4;
+  //mud_img.scaleY = 4;
+  mud = new createjs.Shape();
+  mud.graphics.beginBitmapFill(mud_img).drawRect(0, 0, //-mud_img.width*scale, 0, 
+      wd/scale + mud_img.width*scale, ht/scale);
+  mud.scaleX = scale;
+  mud.scaleY = scale;
+  mud.tileW = mud_img.width * scale;
+  tile_size = mud.tileW;
+
+  stage.addChild(mud); 
+
+  features = [];
+
+  // TODO instead load a bitmap or text file that specifies where features are
+  for (var i = 0; i < 30; i++) {
+    var jump = new createjs.Bitmap(loader.getResult("ramp"));
+    jump.scaleX = scale;
+    jump.scaleY = scale;
+    // place off-screen for now
+    jump.x = - mud.tileW * 2;
+    features.push( { img: jump, x: i * 5, y: i % 5 } );
+    jump.y = features[i].y * mud.tileW;
+    stage.addChild(jump);
+  }
+}
+
+this.update = function() {
+  // make the truck move to x in screen coordinates as it speeds up
+  // This doesn't allow the vehicle to ever overtake the furthest
+  // forward position in x onscreen before level catches up
+  var mix = 0.04;
+  pvel = truck.getVel() * mix + pvel * (1.0 - mix); 
+  level_x += pvel;
+  px = (truck.getPos() - level_x) + min_px;
+
+  //var deltaS = event.delta/1000;
+  // dithered textures produce strobing effect at right velocities
+  //mud.x = Math.round( ((mud.x - vel) % mud.tileW) / scale) * scale;// (mud.x - deltaS* (px - min_px)) & mud.tileW;
+  mud.x = ( ((mud.x - pvel) % mud.tileW));// (mud.x - deltaS* (px - min_px)) & mud.tileW;
+
+  for (var i = 0; i < features.length; i++) {
+    features[i].img.x = features[i].x * mud.tileW - level_x;
+  }
+}
+
+
+} // Level
 
 var truck;
 
@@ -59,7 +117,7 @@ var off_ground = false;
 
 this.jump = function() {
   if (!off_ground) {
-    console.log("jump");
+    //console.log("jump");
     vel_z = 2 * scale;
     off_ground = true;
   }
@@ -181,15 +239,15 @@ this.update = function() {
   pos_y = Math.round(pos_y/scale) * scale;
 
   // complete turn when in new lane
-  if (Math.round(pos_y/max_vel_y) % (mud.tileW/2 * scale/max_vel_y) == 0) {
+  if (Math.round(pos_y/max_vel_y) % (tile_size/2 * scale/max_vel_y) == 0) {
     vel_y = 0;
   }
 
   if (pos_y < 0) {
     pos_y = 0;
   }
-  if (pos_y > ht - mud.tileW * 3) {
-    pos_y = ht - mud.tileW * 3;
+  if (pos_y > ht - tile_size * 3) {
+    pos_y = ht - tile_size * 3;
   }
   
   py = pos_y;
@@ -230,58 +288,12 @@ function init() {
   loader.loadManifest(manifest);
 }
 
-var level = {};
-
-function makeLevel() {
-  mud_img = loader.getResult("mud");
-  //mud_img.scaleX = 4;
-  //mud_img.scaleY = 4;
-  mud = new createjs.Shape();
-  mud.graphics.beginBitmapFill(mud_img).drawRect(0, 0, //-mud_img.width*scale, 0, 
-      wd/scale + mud_img.width*scale, ht/scale);
-  mud.scaleX = scale;
-  mud.scaleY = scale;
-  mud.tileW = mud_img.width * scale;
-  stage.addChild(mud); 
-
-  level.features = [];
-
-  // TODO instead load a bitmap or text file that specifies where features are
-  for (var i = 0; i < 30; i++) {
-    var jump = new createjs.Bitmap(loader.getResult("ramp"));
-    jump.scaleX = scale;
-    jump.scaleY = scale;
-    // place off-screen for now
-    jump.x = - mud.tileW * 2;
-    level.features.push( { img: jump, x: i * 5, y: i % 5 } );
-    jump.y = level.features[i].y * mud.tileW;
-    stage.addChild(jump);
-  }
-}
-
-function levelDraw() {
-  // make the truck move to x in screen coordinates as it speeds up
-  // This doesn't allow the vehicle to ever overtake the furthest
-  // forward position in x onscreen before level catches up
-  var mix = 0.04;
-  pvel = truck.getVel() * mix + pvel * (1.0 - mix); 
-  level_x += pvel;
-  px = (truck.getPos() - level_x) + min_px;
-
-  //var deltaS = event.delta/1000;
-  // dithered textures produce strobing effect at right velocities
-  //mud.x = Math.round( ((mud.x - vel) % mud.tileW) / scale) * scale;// (mud.x - deltaS* (px - min_px)) & mud.tileW;
-  mud.x = ( ((mud.x - pvel) % mud.tileW));// (mud.x - deltaS* (px - min_px)) & mud.tileW;
-
-  for (var i = 0; i < level.features.length; i++) {
-    level.features[i].img.x = level.features[i].x * mud.tileW - level_x;
-  }
-}
 
 var scene_graph;
 
 function handleComplete() {
-  makeLevel();  
+  level = new Level();
+  level.init();  
 
   scene_graph = new createjs.Container();
  
@@ -299,7 +311,7 @@ function handleComplete() {
 function tick(event) {
 
   truck.update();
-  levelDraw();
+  level.update();
 
   stage.update(event);
 }
