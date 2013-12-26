@@ -24,62 +24,53 @@ var min_px = 128;
 var max_px = 512;
 var px = min_px;
 
-/// truck, TODO encapsulate
+var pvel = 0;
+var level_x = 0;
+
+document.onkeydown = handleKeyDown;
+
+var truck;
+
+function Truck() {
+
 var truck_all;
-//var truck = {};
 var truck;
 var wheel1;
 var wheel2;
 var axle1;
+var axle2;
 
 var pos_x = 0;
-var vel = 0;
+
+var vel_x = 0;
 var vel_y = 0;
 var max_vel_y = scale * 4;
 
-document.onkeydown = handleKeyDown;
-
-/*
-function makeWheel(name, x) {
-  var radius = 30;
-  var tire_color = "#111111";
-  truck[name] = new createjs.Shape();
-  truck[name].graphics.beginFill(tire_color).drawCircle(0, 0, radius);
-  truck[name].x = x;
-  truck[name].y = 50;
-  truck_all.addChild(truck[name]);
-  
-  var hubcap_color = "#999999";
-  truck["rim_" + name] = new createjs.Shape();
-  truck["rim_" + name].graphics.beginFill(hubcap_color).drawCircle(0, 0, 
-      radius - 10);
-  truck["rim_" + name].x = x;
-  truck["rim_" + name].y = 50;
-  truck_all.addChild(truck["rim_" + name]);
+this.getVel = function() {
+  return vel_x;
 }
 
-function makeTruck() {
-  truck_all = new createjs.Container();
-  stage.addChild(truck_all);
-  
-  shadow = new createjs.Bitmap(loader.getResult("shadow"));
-  truck_all.addChild(shadow);
-
-  var body_color = "#11d011";
-  truck["body"] = new createjs.Shape();
-  truck["body"].graphics.beginFill(body_color).drawRect(-100, -30, 200, 60);
-  truck_all.addChild(truck["body"]);
-  truck["cab"] = new createjs.Shape();
-  truck["cab"].graphics.beginFill(body_color).drawRect(-10, -70, 70, 50);
-  truck_all.addChild(truck["cab"]);
-  
-  makeWheel("wheel_left", -50);
-  makeWheel("wheel_right", 50);
-
+this.getPos = function() {
+  return pos_x;
 }
-*/
 
-function makeTruck() {
+this.accelerate = function() {
+  vel_x += 1;
+}
+
+this.brake = function() {
+  vel_x -= 1;
+}
+
+this.turnLeft = function() {
+  vel_y = - max_vel_y;
+}
+
+this.turnRight = function() {
+  vel_y = max_vel_y;
+}
+
+this.init = function() {
 
   truck_all = new createjs.Container();
   stage.addChild(truck_all);
@@ -130,17 +121,17 @@ function makeTruck() {
   wheel2.regY = wheel2.regX;
   axle2.addChild(wheel2);
 
-}
+} // init
 
-function updateTruck() {
-  if (vel < 0) {
-    vel = 0;
+this.update = function() {
+  if (vel_x < 0) {
+    vel_x = 0;
   }
-  if (vel > 20) {
-    vel = 20;
+  if (vel_x > 20) {
+    vel_x = 20;
   }
-  vel *= 0.96;
-  pos_x += vel;
+  vel_x *= 0.98;
+  pos_x += vel_x;
 
   // TODO use wheel diameter (24 pixels, or get bounds)
   // pi*d * rotation/(2*pi) = pos_x
@@ -167,7 +158,9 @@ function updateTruck() {
   truck_all.x = px;
   truck_all.y = py;
 
-}
+} // update
+
+} // Truck
 
 var loader;
 
@@ -229,9 +222,9 @@ function levelDraw() {
   // This doesn't allow the vehicle to ever overtake the furthest
   // forward position in x onscreen before level catches up
   var mix = 0.04;
-  pvel = vel * mix + pvel * (1.0 - mix); 
+  pvel = truck.getVel() * mix + pvel * (1.0 - mix); 
   level_x += pvel;
-  px = (pos_x - level_x) + min_px;
+  px = (truck.getPos() - level_x) + min_px;
 
   //var deltaS = event.delta/1000;
   // dithered textures produce strobing effect at right velocities
@@ -249,10 +242,10 @@ function handleComplete() {
   makeLevel();  
 
   scene_graph = new createjs.Container();
-  
-  makeTruck();
-
-  updateTruck();
+ 
+  truck = new Truck(); 
+  truck.init();
+  truck.update();
 
   stage.update();
 
@@ -260,12 +253,10 @@ function handleComplete() {
   createjs.Ticker.setFPS(15);
 }
 
-var pvel = 0;
-var level_x = 0;
 
 function tick(event) {
 
-  updateTruck();
+  truck.update();
   levelDraw();
 
   stage.update(event);
@@ -279,18 +270,18 @@ function handleKeyDown(e) {
   var step = scale;
   switch (e.keyCode) {
     case KEYCODE_LEFT:
-      vel -= 1;
+      truck.brake()
       return false;
     case KEYCODE_RIGHT:
-      vel += 1;
+      truck.accelerate();
       return false;
    case KEYCODE_UP:
-      vel_y = -max_vel_y;
+      truck.turnLeft();
       return false;
    case KEYCODE_DOWN:
-      vel_y = max_vel_y;
+      truck.turnRight();
       return false;
   }
  
-
 }
+
