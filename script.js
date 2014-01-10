@@ -38,12 +38,15 @@ var level_x = 0;
 var features;
 
 this.getHeight = function(t_x, t_y) {
-  var x = Math.round(t_x / tile_size); 
-  var y = Math.round(t_y / tile_size);
-  console.log("pos " + x + " " + y);
+  var x = Math.floor(t_x / tile_size); 
+  var y = Math.floor(t_y / tile_size);
+  //console.log("pos " + Math.round(t_x) + " " + t_y + ", " + x + " " + y);
   for (var i = 0; i < features.length; i++) {
     if ((x === features[i].x) && (y === features[i].y)) {
-      return 1;
+      // this assumes every feature is a jump with a slope of 1
+      var height = t_x - x * tile_size;
+      console.log("height " + height);
+      return height;
     }
   }
 
@@ -73,7 +76,10 @@ this.init = function() {
     jump.scaleY = scale;
     // place off-screen for now
     jump.x = - mud.tileW * 2;
-    features.push( { img: jump, x: i * 5, y: i % 5 } );
+    var x = i * 5;
+    var y = i % 5;
+    features.push( { img: jump, x: x, y: y } );
+    console.log("feature " + x + " " + y);
     jump.y = features[i].y * mud.tileW;
     stage.addChild(jump);
   }
@@ -182,7 +188,11 @@ this.init = function() {
 
   truck_body = new createjs.Container();
   truck_all.addChild(truck_body);
-  
+  //truck_body.regX = tile_size/2; 
+  //truck_body.regY = tile_size/2; 
+  //truck_body.x = truck_body.regX;
+  //truck_body.y = tile_size; //truck_body.regY;
+
   truck = new createjs.Bitmap(loader.getResult("truck"));
   truck.scaleX = scale;
   truck.scaleY = scale;
@@ -264,14 +274,36 @@ this.update = function() {
   }
   
   py = pos_y;
-    
-  if (!off_ground && (level.getHeight(pos_x - tile_size, pos_y) > 0)) {
-    this.jump();
-  }
+ 
+  // TBD make wheel1_offset_x and wheel2_offset_x
+  var wheel1_offset_x = 12;
+  var wheel2_offset_x = tile_size - 12;
+  var wheel_offset_y = tile_size;
+
+  // TBD whyl tile_size * 2?
+  var front_height = level.getHeight(pos_x - (tile_size*2 - wheel2_offset_x), pos_y);
+  var back_height = level.getHeight(pos_x - (tile_size*2 - wheel1_offset_x), pos_y);
+  var truck_length = wheel2_offset_x - wheel1_offset_x;
+  var height_diff = front_height - back_height;
+  var angle = Math.atan2(-height_diff, truck_length);
+  truck_body.rotation = angle * 180.0 / Math.PI;
+  //if (!off_ground && (truck_height > 0)) {
+  //  this.jump();
+  //}
+  pos_z = back_height; 
+  
   // px is determined by the level update
   truck_all.x = px;
   truck_all.y = py;
 
+  // we want the back wheel to be at back_height and the front wheel to be
+  // at front_height, the handle of the rotation is the top left of the truck_body
+  // bitmap which is tile_size * tile_size
+  // so the r = sqrt(wheel_offset_x^2 + wheel_offset_y^2)
+  // and handle_wheel_angle = atan2(-wheel_offset_y , wheel_offset_x)
+  // truck_body.y + r*sin(handle_wheel_angle) - r*sin(angle + handle_wheel_angle) = wheel_height
+  // and we want the back wheel x position to stay constant
+  // truck_body.x + r*cos(handle_wheel1_angle + angle) = wheel1_offset_x
   truck_body.y = -pos_z;
 
 } // update
