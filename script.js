@@ -26,6 +26,20 @@ var min_px = 128;
 var max_px = 512;
 var pvel = 0;
 
+function Jump(scale, tileW, i) {
+
+  this.img = new createjs.Bitmap(loader.getResult("ramp"));
+  this.img.scaleX = scale;
+  this.img.scaleY = scale;
+  // place off-screen for now
+  this.img.x = - tileW * 2;
+  
+  this.x = i * 5;
+  this.y = i % 5;
+
+  this.img.y = this.y * tileW;
+}
+
 function Level() {
 
 //var level = {};
@@ -71,17 +85,10 @@ this.init = function() {
 
   // TODO instead load a bitmap or text file that specifies where features are
   for (var i = 0; i < 30; i++) {
-    var jump = new createjs.Bitmap(loader.getResult("ramp"));
-    jump.scaleX = scale;
-    jump.scaleY = scale;
-    // place off-screen for now
-    jump.x = - mud.tileW * 2;
-    var x = i * 5;
-    var y = i % 5;
-    features.push( { img: jump, x: x, y: y } );
-    console.log("feature " + x + " " + y);
-    jump.y = features[i].y * mud.tileW;
-    stage.addChild(jump);
+    var jump = new Jump(scale, mud.tileW, i);
+    features.push(jump);
+    console.log("feature " + jump.x + " " + jump.y);
+    stage.addChild(jump.img);
   }
 }
 
@@ -281,12 +288,12 @@ this.update = function() {
   var wheel_offset_y = tile_size;
 
   // TBD whyl tile_size * 2?
-  var front_height = level.getHeight(pos_x - (tile_size*2 - wheel2_offset_x), pos_y);
-  var back_height = level.getHeight(pos_x - (tile_size*2 - wheel1_offset_x), pos_y);
+  var front_height = level.getHeight(pos_x - (tile_size * 2 - wheel2_offset_x), pos_y);
+  var back_height  = level.getHeight(pos_x - (tile_size * 2 - wheel1_offset_x), pos_y);
   var truck_length = wheel2_offset_x - wheel1_offset_x;
   var height_diff = front_height - back_height;
   var angle = Math.atan2(-height_diff, truck_length);
-  truck_body.rotation = angle * 180.0 / Math.PI;
+  //truck_body.rotation = angle * 180.0 / Math.PI;
   //if (!off_ground && (truck_height > 0)) {
   //  this.jump();
   //}
