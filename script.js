@@ -26,23 +26,44 @@ var min_px = 128;
 var max_px = 512;
 var pvel = 0;
 
-function Jump(scale, tileW, i) {
+// x and y are in tile coords
+function Jump(scale, tileW, x, y) {
 
   this.img = new createjs.Bitmap(loader.getResult("ramp"));
   this.img.scaleX = scale;
   this.img.scaleY = scale;
   // place off-screen for now
   this.img.x = - tileW * 2;
-  
-  this.x = i * 5;
-  this.y = i % 5;
+ 
+  this.x_offset = 0;
+  this.x = x;
+  this.y = y;
 
+  this.scale = scale;
+  this.tileW = tileW;
+  
   this.img.y = this.y * tileW;
 
+  // x is in tile pixel coords (not screen pixel coords?)
   this.getHeight = function(x) {
     return x;
   }
 }
+
+function ReverseJump(scale, tileW, x, y) {
+     
+  var that = new Jump(scale, tileW, x, y);         
+  that.img.scaleX = -that.img.scaleX;
+  //that.img.x += 
+  that.x_offset = tileW;
+  that.getHeight = function(x) {
+    return that.tileW - x;
+  }
+  
+  return that;
+}
+// inherits doesn't work
+//ReverseJump.inherits(Jump);
 
 function Level() {
 
@@ -57,7 +78,7 @@ var features;
 
 this.getHeight = function(t_x, t_y) {
   var x = Math.floor(t_x / tile_size); 
-  var y = Math.floor(t_y / tile_size);
+  var y = Math.round(t_y / tile_size);
   //console.log("pos " + Math.round(t_x) + " " + t_y + ", " + x + " " + y);
   for (var i = 0; i < features.length; i++) {
     if ((x === features[i].x) && (y === features[i].y)) {
@@ -89,10 +110,15 @@ this.init = function() {
 
   // TODO instead load a bitmap or text file that specifies where features are
   for (var i = 0; i < 30; i++) {
-    var jump = new Jump(scale, mud.tileW, i);
+    var jump = new Jump(scale, mud.tileW, i*5, 3);
     features.push(jump);
     console.log("feature " + jump.x + " " + jump.y);
     stage.addChild(jump.img);
+    
+    var reverse_jump = new ReverseJump(scale, mud.tileW, i*5 + 1, 3);
+    features.push(reverse_jump);
+    console.log("feature reverse_jump " + reverse_jump.x + " " + reverse_jump.y);
+    stage.addChild(reverse_jump.img);
   }
 }
 
@@ -111,7 +137,7 @@ this.update = function() {
   mud.x = ( ((mud.x - pvel) % mud.tileW));// (mud.x - deltaS* (px - min_px)) & mud.tileW;
 
   for (var i = 0; i < features.length; i++) {
-    features[i].img.x = features[i].x * mud.tileW - level_x;
+    features[i].img.x = features[i].x * mud.tileW + features[i].x_offset - level_x;
   }
 }
 
@@ -288,12 +314,14 @@ this.update = function() {
  
   // TBD make wheel_front_offset_x and wheel_back_offset_x
   var wheel_back_offset_x = 12;
-  var wheel_front_offset_x = tile_size - 12;
+  var wheel_front_offset_x = scale * tile_size - 12;
   var wheel_offset_y = tile_size;
 
-  // TBD why tile_size * 2 and *3?
+  // TBD why tile_size * 3?
+  // TODO need a set of functions to convert between screen coordinates,
+  // pixel coords, and tile coords
   var front_height = level.getHeight(pos_x - (tile_size * 3) + wheel_back_offset_x,  pos_y);
-  var back_height  = level.getHeight(pos_x - (tile_size * 2) + wheel_front_offset_x, pos_y);
+  var back_height  = level.getHeight(pos_x - (tile_size * 3) + wheel_front_offset_x, pos_y);
   var truck_length = wheel_back_offset_x - wheel_front_offset_x;
   var height_diff = front_height - back_height;
   var angle = Math.atan2(-height_diff, truck_length);
