@@ -164,6 +164,10 @@ var wheel_back;
 var axle1;
 var axle2;
 
+// the height of the level at the front and back wheels
+var level_front_height;
+var level_back_height;
+
 // screen resolution but level coordinates
 var pos_x = 0;
 var pos_y = 0;
@@ -194,19 +198,23 @@ this.getPos = function() {
 }
 
 this.accelerate = function() {
-  vel_x += 1;
+  if (!off_ground)
+    vel_x += 1;
 }
 
 this.brake = function() {
-  vel_x -= 1;
+  if (!off_ground)
+    vel_x -= 1;
 }
 
 this.turnLeft = function() {
-  vel_y = - max_vel_y;
+  if (!off_ground)
+    vel_y = - max_vel_y;
 }
 
 this.turnRight = function() {
-  vel_y = max_vel_y;
+  if (!off_ground)
+    vel_y = max_vel_y;
 }
 
 this.init = function() {
@@ -272,8 +280,8 @@ this.init = function() {
 
 this.update = function() {
   
-  if (vel_x < 0) {
-    vel_x = 0;
+  if (vel_x < -10) {
+    vel_x = -10;
   }
   if (vel_x > 20) {
     vel_x = 20;
@@ -282,17 +290,21 @@ this.update = function() {
   pos_x += vel_x;
 
   pos_z += vel_z;
-  if (pos_z < 0) {
+  if (pos_z <= Math.max(level_front_height, level_back_height)) {
     //if (vel_z < 0) {
     //  vel_z = -Math.round(vel_z/2);
     //}
-    vel_z = 0;
-    pos_z = 0;
+    if (vel_z < 0) {
+      vel_z = 0;
+    }
+    pos_z = Math.max(level_front_height, level_back_height);
     off_ground = false;
+  } else {
+    off_ground = true;
   }
   if (off_ground) {
-    vel_z -= 0.16 * scale;
-    //console.log(vel_z + " " + pos_z);
+    vel_z -= 0.03 * tile_size;
+    console.log(vel_z + " " + pos_z);
   }
 
   // TODO use wheel diameter (24 pixels, or get bounds)
@@ -327,16 +339,31 @@ this.update = function() {
   // TODO need a set of functions to convert between screen coordinates,
   // pixel coords, and tile coords
   var x_offset = tile_size * scale;
-  var front_height = level.getHeight(pos_x + x_offset + wheel_back_offset_x,  pos_y);
-  var back_height  = level.getHeight(pos_x + x_offset + wheel_front_offset_x, pos_y);
+  var back_height = level.getHeight(pos_x + x_offset + wheel_back_offset_x,  pos_y);
+  var front_height  = level.getHeight(pos_x + x_offset + wheel_front_offset_x, pos_y);
   var truck_length = wheel_back_offset_x - wheel_front_offset_x;
-  var height_diff = front_height - back_height;
-  var angle = Math.atan2(-height_diff, truck_length);
+  
+  if (pos_z < front_height) {
+    //if (vel_z < 0) vel_z = 0;
+    //pos_z = front_height;
+    vel_z += (front_height - pos_z) * 0.2;
+    //off_ground = true;
+    //console.log("off ground " + vel_z + " " + pos_z + " " + front_height); 
+  } 
+  //var dz_front = front_height - level_front_height; 
+  //var dz_back = back_height - level_back_height;
+  
+
+  level_back_height = back_height;
+  level_front_height = front_height;
+  //var height_diff = front_height - back_height;
+  //var angle = Math.atan2(-height_diff, truck_length);
   //truck_body.rotation = angle * 180.0 / Math.PI;
   //if (!off_ground && (truck_height > 0)) {
   //  this.jump();
   //}
-  pos_z = Math.max(back_height, front_height); 
+  
+  //pos_z = Math.max(back_height, front_height); 
   
   // px is determined by the level update
   truck_all.x = px;
