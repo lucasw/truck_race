@@ -287,13 +287,13 @@ this.update = function() {
   py = pos_y;
  
   // TBD make wheel_front_offset_x and wheel_back_offset_x
-  var wheel_front_offset_x = 12;
-  var wheel_back_offset_x = tile_size - 12;
+  var wheel_back_offset_x = 12;
+  var wheel_front_offset_x = tile_size - 12;
   var wheel_offset_y = tile_size;
 
-  // TBD whyl tile_size * 2?
-  var front_height = level.getHeight(pos_x - (tile_size * 2 - wheel_back_offset_x), pos_y);
-  var back_height  = level.getHeight(pos_x - (tile_size * 2 - wheel_front_offset_x), pos_y);
+  // TBD why tile_size * 2 and *3?
+  var front_height = level.getHeight(pos_x - (tile_size * 3) + wheel_back_offset_x,  pos_y);
+  var back_height  = level.getHeight(pos_x - (tile_size * 2) + wheel_front_offset_x, pos_y);
   var truck_length = wheel_back_offset_x - wheel_front_offset_x;
   var height_diff = front_height - back_height;
   var angle = Math.atan2(-height_diff, truck_length);
