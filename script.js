@@ -34,7 +34,11 @@ function Jump(scale, tileW, x, y) {
   this.img.scaleY = scale;
   // place off-screen for now
   this.img.x = - tileW * 2;
- 
+
+  // this is a correction in pixels between the left hand
+  // position of the bitmap and where it needs to be, useful
+  // when a scaleX paremeter is -1, then the image is a width to the left 
+  // of expected.
   this.x_offset = 0;
   this.x = x;
   this.y = y;
@@ -42,7 +46,7 @@ function Jump(scale, tileW, x, y) {
   this.scale = scale;
   this.tileW = tileW;
   
-  this.img.y = this.y * tileW;
+  this.img.y = (this.y + 1) * tileW;
 
   // x is in tile pixel coords (not screen pixel coords?)
   this.getHeight = function(x) {
@@ -54,7 +58,6 @@ function ReverseJump(scale, tileW, x, y) {
      
   var that = new Jump(scale, tileW, x, y);         
   that.img.scaleX = -that.img.scaleX;
-  //that.img.x += 
   that.x_offset = tileW;
   that.getHeight = function(x) {
     return that.tileW - x;
@@ -109,13 +112,15 @@ this.init = function() {
   features = [];
 
   // TODO instead load a bitmap or text file that specifies where features are
-  for (var i = 0; i < 30; i++) {
-    var jump = new Jump(scale, mud.tileW, i*5, 3);
+  for (var i = 0; i < 15; i++) {
+    var x = Math.floor(Math.random() * 150);
+    var y =  1 + i % 4; //Math.floor(Math.random() * 5 + 1);
+    var jump = new Jump(scale, mud.tileW, x, y);
     features.push(jump);
     console.log("feature " + jump.x + " " + jump.y);
     stage.addChild(jump.img);
     
-    var reverse_jump = new ReverseJump(scale, mud.tileW, i*5 + 1, 3);
+    var reverse_jump = new ReverseJump(scale, mud.tileW, x + 1, y);
     features.push(reverse_jump);
     console.log("feature reverse_jump " + reverse_jump.x + " " + reverse_jump.y);
     stage.addChild(reverse_jump.img);
@@ -159,6 +164,7 @@ var wheel_back;
 var axle1;
 var axle2;
 
+// screen resolution but level coordinates
 var pos_x = 0;
 var pos_y = 0;
 // how high in air or on ramp
@@ -320,8 +326,9 @@ this.update = function() {
   // TBD why tile_size * 3?
   // TODO need a set of functions to convert between screen coordinates,
   // pixel coords, and tile coords
-  var front_height = level.getHeight(pos_x - (tile_size * 3) + wheel_back_offset_x,  pos_y);
-  var back_height  = level.getHeight(pos_x - (tile_size * 3) + wheel_front_offset_x, pos_y);
+  var x_offset = tile_size * scale;
+  var front_height = level.getHeight(pos_x + x_offset + wheel_back_offset_x,  pos_y);
+  var back_height  = level.getHeight(pos_x + x_offset + wheel_front_offset_x, pos_y);
   var truck_length = wheel_back_offset_x - wheel_front_offset_x;
   var height_diff = front_height - back_height;
   var angle = Math.atan2(-height_diff, truck_length);
