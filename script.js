@@ -38,6 +38,10 @@ function Jump(scale, tileW, i) {
   this.y = i % 5;
 
   this.img.y = this.y * tileW;
+
+  this.getHeight = function(x) {
+    return x;
+  }
 }
 
 function Level() {
@@ -58,8 +62,8 @@ this.getHeight = function(t_x, t_y) {
   for (var i = 0; i < features.length; i++) {
     if ((x === features[i].x) && (y === features[i].y)) {
       // this assumes every feature is a jump with a slope of 1
-      var height = t_x - x * tile_size;
-      console.log("height " + height);
+      var height = features[i].getHeight(t_x - x * tile_size);
+      //console.log("height " + height);
       return height;
     }
   }
@@ -124,8 +128,8 @@ var truck_all;
 var truck_body;
 
 var truck;
-var wheel1;
-var wheel2;
+var wheel_front;
+var wheel_back;
 var axle1;
 var axle2;
 
@@ -210,26 +214,26 @@ this.init = function() {
   axle1.y = 128;
   truck_body.addChild(axle1);
   
-  wheel1 = new createjs.Bitmap(loader.getResult("wheel"));
-  //var wheel_wd = wheel1.width;
-  wheel1.scaleX = scale;
-  wheel1.scaleY = scale;
-  wheel1.regX = 12;
-  wheel1.regY = wheel1.regX;
-  //wheel1.regY = wheel_wd/2;
-  axle1.addChild(wheel1);
+  wheel_front = new createjs.Bitmap(loader.getResult("wheel"));
+  //var wheel_wd = wheel_front.width;
+  wheel_front.scaleX = scale;
+  wheel_front.scaleY = scale;
+  wheel_front.regX = 12;
+  wheel_front.regY = wheel_front.regX;
+  //wheel_front.regY = wheel_wd/2;
+  axle1.addChild(wheel_front);
 
   var axle2 = new createjs.Container();
   axle2.x = 106;
   axle2.y = axle1.y;
   truck_body.addChild(axle2);
 
-  wheel2 = new createjs.Bitmap(loader.getResult("wheel"));
-  wheel2.scaleX = scale;
-  wheel2.scaleY = scale;
-  wheel2.regX = wheel1.regX;
-  wheel2.regY = wheel2.regX;
-  axle2.addChild(wheel2);
+  wheel_back = new createjs.Bitmap(loader.getResult("wheel"));
+  wheel_back.scaleX = scale;
+  wheel_back.scaleY = scale;
+  wheel_back.regX = wheel_front.regX;
+  wheel_back.regY = wheel_back.regX;
+  axle2.addChild(wheel_back);
 
 } // init
 
@@ -262,8 +266,8 @@ this.update = function() {
   // TODO use wheel diameter (24 pixels, or get bounds)
   // pi*d * rotation/(2*pi) = pos_x
   // rotation = pos_x * 2 / d ?
-  wheel1.rotation = pos_x * 2.5; //setTransform(0,0, scale, scale, pos_x); 
-  wheel2.rotation = pos_x * 2.5; //setTransform(0,0, scale, scale, pos_x); 
+  wheel_front.rotation = pos_x * 2.5; //setTransform(0,0, scale, scale, pos_x); 
+  wheel_back.rotation = pos_x * 2.5; //setTransform(0,0, scale, scale, pos_x); 
  
   pos_y += vel_y;
   pos_y = Math.round(pos_y/scale) * scale;
@@ -282,22 +286,22 @@ this.update = function() {
   
   py = pos_y;
  
-  // TBD make wheel1_offset_x and wheel2_offset_x
-  var wheel1_offset_x = 12;
-  var wheel2_offset_x = tile_size - 12;
+  // TBD make wheel_front_offset_x and wheel_back_offset_x
+  var wheel_front_offset_x = 12;
+  var wheel_back_offset_x = tile_size - 12;
   var wheel_offset_y = tile_size;
 
   // TBD whyl tile_size * 2?
-  var front_height = level.getHeight(pos_x - (tile_size * 2 - wheel2_offset_x), pos_y);
-  var back_height  = level.getHeight(pos_x - (tile_size * 2 - wheel1_offset_x), pos_y);
-  var truck_length = wheel2_offset_x - wheel1_offset_x;
+  var front_height = level.getHeight(pos_x - (tile_size * 2 - wheel_back_offset_x), pos_y);
+  var back_height  = level.getHeight(pos_x - (tile_size * 2 - wheel_front_offset_x), pos_y);
+  var truck_length = wheel_back_offset_x - wheel_front_offset_x;
   var height_diff = front_height - back_height;
   var angle = Math.atan2(-height_diff, truck_length);
   //truck_body.rotation = angle * 180.0 / Math.PI;
   //if (!off_ground && (truck_height > 0)) {
   //  this.jump();
   //}
-  pos_z = back_height; 
+  pos_z = Math.max(back_height, front_height); 
   
   // px is determined by the level update
   truck_all.x = px;
@@ -310,7 +314,7 @@ this.update = function() {
   // and handle_wheel_angle = atan2(-wheel_offset_y , wheel_offset_x)
   // truck_body.y + r*sin(handle_wheel_angle) - r*sin(angle + handle_wheel_angle) = wheel_height
   // and we want the back wheel x position to stay constant
-  // truck_body.x + r*cos(handle_wheel1_angle + angle) = wheel1_offset_x
+  // truck_body.x + r*cos(handle_wheel_front_angle + angle) = wheel_front_offset_x
   truck_body.y = -pos_z;
 
 } // update
