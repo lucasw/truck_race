@@ -27,9 +27,9 @@ var max_px = 512;
 var pvel = 0;
 
 // x and y are in tile coords
-function Jump(scale, tileW, x, y) {
+function Feature(scale, tileW, x, y, name) {
 
-  this.img = new createjs.Bitmap(loader.getResult("ramp"));
+  this.img = new createjs.Bitmap(loader.getResult(name));
   this.img.scaleX = scale;
   this.img.scaleY = scale;
   // place off-screen for now
@@ -50,13 +50,13 @@ function Jump(scale, tileW, x, y) {
 
   // x is in tile pixel coords (not screen pixel coords?)
   this.getHeight = function(x) {
-    return x;
+    return 0;
   }
 }
 
 function ReverseJump(scale, tileW, x, y) {
      
-  var that = new Jump(scale, tileW, x, y);         
+  var that = new Feature(scale, tileW, x, y, "ramp");         
   that.img.scaleX = -that.img.scaleX;
   that.x_offset = tileW;
   that.getHeight = function(x) {
@@ -67,8 +67,16 @@ function ReverseJump(scale, tileW, x, y) {
 }
 // inherits doesn't work
 //ReverseJump.inherits(Jump);//////
-//
 
+function Jump(scale, tileW, x, y) {
+  var that = new Feature(scale, tileW, x, y, "ramp");         
+
+  that.getHeight = function(x) {
+    return x;
+  }
+
+  return that;
+}
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 function Level() {
@@ -121,9 +129,23 @@ this.init = function() {
 
   features = [];
 
+  var level_length = 150;
+  // start line
+  for (var i = 1; i < 10; i++) {
+    var feature = new Feature(scale, mud.tileW, 5, i, "checkers");
+    features.push(feature);
+    stage.addChild(feature.img);
+  } 
+  // finish line
+  for (var i = 0; i < 10; i++) {
+    var feature = new Feature(scale, mud.tileW, 5 + level_length, i, "checkers");
+    features.push(feature);
+    stage.addChild(feature.img);
+  }
+
   // TODO instead load a bitmap or text file that specifies where features are
   for (var i = 0; i < 15; i++) {
-    var x = Math.floor(random() * 150);
+    var x = Math.floor( 5 + random() * level_length);
     var y =  1 + i % 4; //Math.floor(Math.random() * 5 + 1);
     var jump = new Jump(scale, mud.tileW, x, y);
     features.push(jump);
@@ -368,7 +390,7 @@ this.update = function() {
   } 
   
   if (!off_ground) {
-    vel_x += veh_diff * 0.01;
+    vel_x += veh_diff * 0.005;
   }
   //var dz_front = front_height - level_front_height; 
   //var dz_back = back_height - level_back_height;
@@ -421,6 +443,7 @@ function init() {
     {src:"assets/truck.png", id:"truck"},
     {src:"assets/shadow.png", id:"shadow"},
     {src:"assets/wheel.png", id:"wheel"},
+    {src:"assets/checkers.png", id:"checkers"},
     {src:"assets/ramp.png", id:"ramp"}
   ];
 
