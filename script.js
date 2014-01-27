@@ -66,9 +66,13 @@ function ReverseJump(scale, tileW, x, y) {
   return that;
 }
 // inherits doesn't work
-//ReverseJump.inherits(Jump);
+//ReverseJump.inherits(Jump);//////
+//
 
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 function Level() {
+
 
 //var level = {};
 // level, TODO encapsulate
@@ -95,13 +99,19 @@ this.getHeight = function(t_x, t_y) {
   return 0;
 }
 
+var seed = 1;
+function random() {
+  var x = Math.sin(seed++) * 10000;
+  return x - Math.floor(x);
+}
+
 this.init = function() {
   mud_img = loader.getResult("mud");
   //mud_img.scaleX = 4;
   //mud_img.scaleY = 4;
   mud = new createjs.Shape();
-  mud.graphics.beginBitmapFill(mud_img).drawRect(0, 0, //-mud_img.width*scale, 0, 
-      wd/scale + mud_img.width*scale, ht/scale);
+  mud.graphics.beginBitmapFill(mud_img).drawRect(-mud_img.width*scale, 0, 
+      wd/scale + mud_img.width*scale*2, ht/scale);
   mud.scaleX = scale;
   mud.scaleY = scale;
   mud.tileW = mud_img.width * scale;
@@ -113,7 +123,7 @@ this.init = function() {
 
   // TODO instead load a bitmap or text file that specifies where features are
   for (var i = 0; i < 15; i++) {
-    var x = Math.floor(Math.random() * 150);
+    var x = Math.floor(random() * 150);
     var y =  1 + i % 4; //Math.floor(Math.random() * 5 + 1);
     var jump = new Jump(scale, mud.tileW, x, y);
     features.push(jump);
@@ -303,7 +313,7 @@ this.update = function() {
     off_ground = true;
   }
   if (off_ground) {
-    vel_z -= 0.03 * tile_size;
+    vel_z -= 0.025 * tile_size;
     console.log(vel_z + " " + pos_z);
   }
 
@@ -342,14 +352,24 @@ this.update = function() {
   var back_height = level.getHeight(pos_x + x_offset + wheel_back_offset_x,  pos_y);
   var front_height  = level.getHeight(pos_x + x_offset + wheel_front_offset_x, pos_y);
   var truck_length = wheel_back_offset_x - wheel_front_offset_x;
-  
-  if (pos_z < front_height) {
-    //if (vel_z < 0) vel_z = 0;
-    //pos_z = front_height;
-    vel_z += (front_height - pos_z) * 0.2;
-    //off_ground = true;
+ 
+  var veh_diff = back_height - front_height;
+  var pos_diff = Math.max(front_height - pos_z, back_height - pos_z);
+  if (pos_diff > 20) {
+    // bounce back into same lane first
+    if (Math.abs(vel_y) > 0.001) {
+      vel_y = -vel_y * 0.9;
+    } else if (Math.abs(vel_x) > 0.001) {
+        vel_x = -vel_x;
+    } 
+  } else if (pos_diff > 0) {
+    vel_z += (pos_diff) * 0.2;
     //console.log("off ground " + vel_z + " " + pos_z + " " + front_height); 
   } 
+  
+  if (!off_ground) {
+    vel_x += veh_diff * 0.01;
+  }
   //var dz_front = front_height - level_front_height; 
   //var dz_back = back_height - level_back_height;
   
