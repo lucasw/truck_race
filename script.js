@@ -19,13 +19,6 @@ var manifest;
 
 document.onkeydown = handleKeyDown;
 
-// position of the player on screen, belongs in special object?
-var px = min_px;
-var py = 128;
-var min_px = 128;
-var max_px = 512;
-var pvel = 0;
-
 // x and y are in tile coords
 function Feature(scale, tileW, x, y, name) {
 
@@ -164,14 +157,19 @@ this.update = function() {
   // This doesn't allow the vehicle to ever overtake the furthest
   // forward position in x onscreen before level catches up
   var mix = 0.04;
-  pvel = truck.getVel() * mix + pvel * (1.0 - mix); 
-  level_x += pvel;
-  px = (truck.getPos() - level_x) + min_px;
+  truck.pvel = truck.getVel() * mix + truck.pvel * (1.0 - mix); 
+  level_x += truck.pvel;
+  // move this into truck update, have a set level_x function
+  truck.px = (truck.getPos() - level_x) + min_px;
+  
+  for (var i = 0; i < cpu_trucks.length; i++) {
+    cpu_trucks[i].px = cpu_trucks[i].getPos() - level_x + min_px;
+  }
 
   //var deltaS = event.delta/1000;
   // dithered textures produce strobing effect at right velocities
   //mud.x = Math.round( ((mud.x - vel) % mud.tileW) / scale) * scale;// (mud.x - deltaS* (px - min_px)) & mud.tileW;
-  mud.x = ( ((mud.x - pvel) % mud.tileW));// (mud.x - deltaS* (px - min_px)) & mud.tileW;
+  mud.x = ( ((mud.x - truck.pvel) % mud.tileW));// (mud.x - deltaS* (px - min_px)) & mud.tileW;
 
   for (var i = 0; i < features.length; i++) {
     features[i].img.x = features[i].x * mud.tileW + features[i].x_offset - level_x;
@@ -183,7 +181,18 @@ this.update = function() {
 
 var truck;
 
+var cpu_trucks = [];
+
+var min_px = 128;
+var max_px = 512;
+
 function Truck() {
+
+// position on screen
+this.px = min_px;
+this.py = 128;
+this.pvel = 0;
+
 
 // includes the shadow
 var truck_all;
@@ -249,7 +258,10 @@ this.turnRight = function() {
     vel_y = max_vel_y;
 }
 
-this.init = function() {
+this.init = function(truck_image, x, y) {
+  
+  pos_x = x;
+  pos_y = y;
 
   truck_all = new createjs.Container();
   stage.addChild(truck_all);
@@ -268,7 +280,6 @@ this.init = function() {
   shadow2.y = 96;
   truck_all.addChild(shadow2);
 
-
   truck_body = new createjs.Container();
   truck_all.addChild(truck_body);
   //truck_body.regX = tile_size/2; 
@@ -276,7 +287,7 @@ this.init = function() {
   //truck_body.x = truck_body.regX;
   //truck_body.y = tile_size; //truck_body.regY;
 
-  truck = new createjs.Bitmap(loader.getResult("truck"));
+  truck = new createjs.Bitmap(loader.getResult(truck_image));
   truck.scaleX = scale;
   truck.scaleY = scale;
   truck_body.addChild(truck);
@@ -309,7 +320,7 @@ this.init = function() {
 
 } // init
 
-
+// Truck
 this.update = function() {
   
   if (vel_x < -10) {
@@ -360,7 +371,7 @@ this.update = function() {
     pos_y = ht - tile_size * 3;
   }
   
-  py = pos_y;
+  this.py = pos_y;
  
   // TBD make wheel_front_offset_x and wheel_back_offset_x
   var wheel_back_offset_x = 12;
@@ -408,8 +419,8 @@ this.update = function() {
   //pos_z = Math.max(back_height, front_height); 
   
   // px is determined by the level update
-  truck_all.x = px;
-  truck_all.y = py;
+  truck_all.x = this.px;
+  truck_all.y = this.py;
 
   // we want the back wheel to be at back_height and the front wheel to be
   // at front_height, the handle of the rotation is the top left of the truck_body
@@ -441,6 +452,7 @@ function init() {
   manifest = [
     {src:"assets/mud.png", id:"mud"},
     {src:"assets/truck.png", id:"truck"},
+    {src:"assets/truck_cpu.png", id:"truck_cpu"},
     {src:"assets/shadow.png", id:"shadow"},
     {src:"assets/wheel.png", id:"wheel"},
     {src:"assets/checkers.png", id:"checkers"},
@@ -462,8 +474,18 @@ function handleComplete() {
   scene_graph = new createjs.Container();
  
   truck = new Truck(); 
-  truck.init();
+  truck.init("truck", 0, 0);
   truck.update();
+
+  // make rows of cpu trucks
+  for (var i = 0; i < 3; i++) {
+  for (var j = 0; j < 1; j++) {
+    var cpu_truck = new Truck();
+    cpu_truck.init("truck_cpu", j * tile_size * scale, (i + 1) * tile_size * scale);
+    cpu_truck.update();
+    cpu_trucks.push(cpu_truck);
+  }
+  }
 
   stage.update();
 
@@ -475,6 +497,11 @@ function handleComplete() {
 function tick(event) {
 
   truck.update();
+
+  for (var i = 0; i < cpu_trucks.length; i++) {
+    cpu_trucks[i].update();
+  }
+
   level.update();
 
   stage.update(event);
