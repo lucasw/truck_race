@@ -320,6 +320,23 @@ this.init = function(truck_image, x, y) {
 
 } // init
 
+// if the car is a cpu use these
+this.cpu_aggression = 0.4;
+this.autoDrive = function() {
+    if (Math.random() > 1.0 - this.cpu_aggression) {
+      this.accelerate();
+    }
+    if (Math.random() > 0.98) {
+      this.turnLeft();
+    }
+    if (Math.random() > 0.98) {
+      this.turnRight();
+    }
+    if (Math.random() > 0.996) {
+      this.brake();
+    }
+}
+
 // Truck
 this.update = function() {
   
@@ -329,7 +346,9 @@ this.update = function() {
   if (vel_x > 20) {
     vel_x = 20;
   }
-  vel_x *= 0.98;
+  if (!off_ground) {
+    vel_x *= 0.98;
+  }
   pos_x += vel_x;
 
   pos_z += vel_z;
@@ -347,7 +366,7 @@ this.update = function() {
   }
   if (off_ground) {
     vel_z -= 0.025 * tile_size;
-    console.log(vel_z + " " + pos_z);
+    //console.log(vel_z + " " + pos_z);
   }
 
   // TODO use wheel diameter (24 pixels, or get bounds)
@@ -479,9 +498,10 @@ function handleComplete() {
 
   // make rows of cpu trucks
   for (var i = 0; i < 3; i++) {
-  for (var j = 0; j < 1; j++) {
+  for (var j = 0; j < 2; j++) {
     var cpu_truck = new Truck();
-    cpu_truck.init("truck_cpu", j * tile_size * scale, (i + 1) * tile_size * scale);
+    cpu_truck.init("truck_cpu", -j * tile_size * scale, (i + 1) * tile_size * scale);
+    cpu_truck.cpu_aggression = 0.1 + Math.random() * 0.7;
     cpu_truck.update();
     cpu_trucks.push(cpu_truck);
   }
@@ -498,7 +518,8 @@ function tick(event) {
 
   truck.update();
 
-  for (var i = 0; i < cpu_trucks.length; i++) {
+  for (var i = 0; i < cpu_trucks.length; i++) { 
+    cpu_trucks[i].autoDrive();
     cpu_trucks[i].update();
   }
 
