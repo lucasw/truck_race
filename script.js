@@ -92,8 +92,8 @@ this.level_length = 150;
 this.getHeight = function(t_x, t_y) {
 
   if (wrap) {
-  if (t_x > this.level_length) t_x -= this.level_length;
-  if (t_x < 0) t_x += this.level_length;
+    if (t_x > this.level_length) t_x -= this.level_length;
+    if (t_x < 0) t_x += this.level_length;
   }
 
   var x = Math.floor(t_x / tile_size); 
@@ -170,10 +170,18 @@ this.update = function() {
   truck.pvel = truck.getVel() * mix + truck.pvel * (1.0 - mix); 
   level_x += truck.pvel;
 
-  if (wrap) {
-  if (level_x > this.level_length) level_x -= this.level_length;
-  if (level_x < 0) level_x += this.level_length;
+  if (false) {
+    if (level_x > this.level_length) {
+      console.log("wrap level_x " + level_x + " " + level.level_length); 
+      level_x -= this.level_length;
+    }
+    if (level_x < 0) {
+      console.log("wrap level_x " + level_x + " " + level.level_length); 
+      level_x += this.level_length;
+    }
+    
   }
+  console.log(" level_x " + level_x);
   // move this into truck update, have a set level_x function
   //truck.px = (truck.getPos() - level_x) + min_px;
   
@@ -368,8 +376,15 @@ this.update = function() {
   pos_x += vel_x;
 
   if (wrap) {
-  if (pos_x > level.level_length) pos_x -= level.level_length;
-  if (pos_x < 0) pos_x += level.level_length;
+  if (pos_x > level.level_length * tile_size) {
+    console.log("truck wrap pos_x " + pos_x + " " + level.level_length); 
+    pos_x -= level.level_length * tile_size;
+    } 
+    if (pos_x < 0) {
+      console.log("truck wrap pos_x " + pos_x + " " + level.level_length); 
+      pos_x += level.level_length * tile_size;
+    }
+    console.log(" truck pos " + pos_x);
   }
 
   pos_z += vel_z;
@@ -521,7 +536,7 @@ function handleComplete() {
 
   // make rows of cpu trucks
   for (var i = 0; i < 3; i++) {
-  for (var j = 0; j < 2; j++) {
+  for (var j = 0; j < 3; j++) {
     var cpu_truck = new Truck();
     cpu_truck.init("truck_cpu", -j * tile_size * scale, (i + 1) * tile_size * scale);
     cpu_truck.cpu_aggression = 0.1 + Math.random() * 0.7;
