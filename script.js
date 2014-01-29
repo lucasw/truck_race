@@ -17,6 +17,9 @@ var tile_size;
 
 var manifest;
 
+var level;
+var wrap = false;
+
 document.onkeydown = handleKeyDown;
 
 // x and y are in tile coords
@@ -43,6 +46,7 @@ function Feature(scale, tileW, x, y, name) {
 
   // x is in tile pixel coords (not screen pixel coords?)
   this.getHeight = function(x) {
+
     return 0;
   }
 }
@@ -74,7 +78,6 @@ function Jump(scale, tileW, x, y) {
 ///////////////////////////////////////////////////////////////////////////////
 function Level() {
 
-
 //var level = {};
 // level, TODO encapsulate
 var mud;
@@ -84,7 +87,15 @@ var ramp;
 var level_x = 0;
 var features;
 
+this.level_length = 150;
+
 this.getHeight = function(t_x, t_y) {
+
+  if (wrap) {
+  if (t_x > this.level_length) t_x -= this.level_length;
+  if (t_x < 0) t_x += this.level_length;
+  }
+
   var x = Math.floor(t_x / tile_size); 
   var y = Math.round(t_y / tile_size);
   //console.log("pos " + Math.round(t_x) + " " + t_y + ", " + x + " " + y);
@@ -122,7 +133,6 @@ this.init = function() {
 
   features = [];
 
-  var level_length = 150;
   // start line
   for (var i = 1; i < 10; i++) {
     var feature = new Feature(scale, mud.tileW, 5, i, "checkers");
@@ -131,15 +141,15 @@ this.init = function() {
   } 
   // finish line
   for (var i = 0; i < 10; i++) {
-    var feature = new Feature(scale, mud.tileW, 5 + level_length, i, "checkers");
+    var feature = new Feature(scale, mud.tileW, 5 + this.level_length, i, "checkers");
     features.push(feature);
     stage.addChild(feature.img);
   }
 
   // TODO instead load a bitmap or text file that specifies where features are
-  for (var i = 0; i < 15; i++) {
-    var x = Math.floor( 5 + random() * level_length);
-    var y =  1 + i % 4; //Math.floor(Math.random() * 5 + 1);
+  for (var i = 0; i < 25; i++) {
+    var x = Math.floor( 5 + random() * this.level_length - 10);
+    var y =  i % 5; //Math.floor(Math.random() * 5 + 1);
     var jump = new Jump(scale, mud.tileW, x, y);
     features.push(jump);
     console.log("feature " + jump.x + " " + jump.y);
@@ -159,11 +169,16 @@ this.update = function() {
   var mix = 0.04;
   truck.pvel = truck.getVel() * mix + truck.pvel * (1.0 - mix); 
   level_x += truck.pvel;
+
+  if (wrap) {
+  if (level_x > this.level_length) level_x -= this.level_length;
+  if (level_x < 0) level_x += this.level_length;
+  }
   // move this into truck update, have a set level_x function
-  truck.px = (truck.getPos() - level_x) + min_px;
+  //truck.px = (truck.getPos() - level_x) + min_px;
   
-  for (var i = 0; i < cpu_trucks.length; i++) {
-    cpu_trucks[i].px = cpu_trucks[i].getPos() - level_x + min_px;
+  for (var i = 0; i < all_trucks.length; i++) {
+    all_trucks[i].px = all_trucks[i].getPos() - level_x + min_px;
   }
 
   //var deltaS = event.delta/1000;
@@ -181,13 +196,14 @@ this.update = function() {
 
 var truck;
 
-var cpu_trucks = [];
+var all_trucks = [];
 
 var min_px = 128;
 var max_px = 512;
 
 function Truck() {
 
+this.is_cpu = true;
 // position on screen
 this.px = min_px;
 this.py = 128;
@@ -351,6 +367,11 @@ this.update = function() {
   }
   pos_x += vel_x;
 
+  if (wrap) {
+  if (pos_x > level.level_length) pos_x -= level.level_length;
+  if (pos_x < 0) pos_x += level.level_length;
+  }
+
   pos_z += vel_z;
   if (pos_z <= Math.max(level_front_height, level_back_height)) {
     //if (vel_z < 0) {
@@ -492,9 +513,11 @@ function handleComplete() {
 
   scene_graph = new createjs.Container();
  
-  truck = new Truck(); 
+  truck = new Truck();
+  truck.is_cpu = false;
   truck.init("truck", 0, 0);
   truck.update();
+  all_trucks.push(truck);
 
   // make rows of cpu trucks
   for (var i = 0; i < 3; i++) {
@@ -503,7 +526,7 @@ function handleComplete() {
     cpu_truck.init("truck_cpu", -j * tile_size * scale, (i + 1) * tile_size * scale);
     cpu_truck.cpu_aggression = 0.1 + Math.random() * 0.7;
     cpu_truck.update();
-    cpu_trucks.push(cpu_truck);
+    all_trucks.push(cpu_truck);
   }
   }
 
@@ -516,11 +539,11 @@ function handleComplete() {
 
 function tick(event) {
 
-  truck.update();
-
-  for (var i = 0; i < cpu_trucks.length; i++) { 
-    cpu_trucks[i].autoDrive();
-    cpu_trucks[i].update();
+  for (var i = 0; i < all_trucks.length; i++) { 
+    if (all_trucks[i].is_cpu) {
+      all_trucks[i].autoDrive();
+    }
+    all_trucks[i].update();
   }
 
   level.update();
