@@ -267,7 +267,7 @@ this.getPos = function() {
 }
 
 this.getPosY = function() {
-  return pos_x;
+  return pos_y;
 }
 
 this.accelerate = function() {
@@ -370,6 +370,13 @@ this.autoDrive = function() {
     if (Math.random() > 0.996) {
       this.brake();
     }
+
+    
+    if (Math.random() > 0.9995) {
+      this.cpu_aggression += Math.random() * 0.3;
+      if (this.cpu_aggression > 1.0) this.cpu_aggression = 1.0;
+      if (this.cpu_aggression < 0.0) this.cpu_aggression = 0.0;
+    }
 }
 
 
@@ -387,10 +394,11 @@ this.getFrontPos = function() {
 this.frontCollide = function(other_truck) {
   //var average_vel = this.getVel() + other_truck.getVel();
 
-  if (Math.abs(vel_y) > 0.001) {
-    vel_y = -vel_y * 0.9;
-  }
+  //if (Math.abs(vel_y) > 0.001) {
+  //  vel_y = -vel_y * 0.9;
+  //}
   vel_x *= 0.9;
+  vel_x -= 5.0;
   //var diff_vel = other_truck.
   //if (Math.abs(getVel() > average_vel) {
   //  vel_
@@ -401,6 +409,7 @@ this.frontCollide = function(other_truck) {
 
 this.backCollide = function(other_truck) {
   vel_x *= 1.1;
+  vel_x += 6.0;
 }
 
 // Truck
@@ -596,10 +605,10 @@ function handleComplete() {
   all_trucks.push(truck);
 
   // make rows of cpu trucks
-  for (var i = 0; i < 0; i++) {
-  for (var j = 0; j < 1; j++) {
+  for (var i = 0; i < 3; i++) {
+  for (var j = 0; j < 8; j++) {
     var cpu_truck = new Truck();
-    cpu_truck.init("truck_cpu", -j * tile_size * scale, (i + 1) * tile_size * scale);
+    cpu_truck.init("truck_cpu", -j * tile_size * scale * 1.2, (i + 1) * tile_size * scale);
     cpu_truck.cpu_aggression = 0.1 + Math.random() * 0.7;
     cpu_truck.update();
     all_trucks.push(cpu_truck);
@@ -619,13 +628,14 @@ function tick(event) {
     // look for collisions
     for (var j = 0; j < all_trucks.length; j++) { 
       if (i === j) continue;
-      if ((Math.abs(all_trucks[i].getPosY() - all_trucks[j].getPosY()) < tile_size/2) &&
+      if ((Math.abs(all_trucks[i].getPosY() - all_trucks[j].getPosY()) < tile_size/3) &&
           (all_trucks[i].getFrontPos() > all_trucks[j].getBackPos()) &&
           (all_trucks[i].getFrontPos() < all_trucks[j].getFrontPos())
           ) {
         console.log("collision " + i + " " + j + " " + 
             all_trucks[i].getFrontPos() + 
-            ", " + all_trucks[j].getFrontPos()
+            ", " + all_trucks[j].getFrontPos() +
+            ", y " + all_trucks[i].getPosY() + " " + all_trucks[j].getPosY()
             );
         all_trucks[i].frontCollide(all_trucks[j]); 
         all_trucks[j].backCollide(all_trucks[i]); 
