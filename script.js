@@ -181,7 +181,7 @@ this.update = function() {
     }
     
   }
-  console.log(" level_x " + level_x);
+  //console.log(" level_x " + level_x);
   // move this into truck update, have a set level_x function
   //truck.px = (truck.getPos() - level_x) + min_px;
   
@@ -246,6 +246,10 @@ var max_vel_y = scale * 4;
 
 var off_ground = false;
 
+var x_offset;
+var wheel_back_offset_x;
+var wheel_front_offset_x;
+
 this.jump = function() {
   if (!off_ground) {
     //console.log("jump");
@@ -262,14 +266,18 @@ this.getPos = function() {
   return pos_x;
 }
 
+this.getPosY = function() {
+  return pos_x;
+}
+
 this.accelerate = function() {
-  if (!off_ground)
+  if (!off_ground && (vel_x < 20))
     vel_x += 1;
 }
 
 this.brake = function() {
   if (!off_ground)
-    vel_x -= 1;
+    vel_x -= 2;
 }
 
 this.turnLeft = function() {
@@ -342,6 +350,9 @@ this.init = function(truck_image, x, y) {
   wheel_back.regY = wheel_back.regX;
   axle2.addChild(wheel_back);
 
+  x_offset = tile_size * scale;
+  wheel_back_offset_x = 12;
+  wheel_front_offset_x = scale * tile_size - 12;
 } // init
 
 // if the car is a cpu use these
@@ -361,14 +372,45 @@ this.autoDrive = function() {
     }
 }
 
+
+this.getBackPos = function() {
+  var pos = pos_x + x_offset + wheel_back_offset_x;
+  //console.log("back pos " + pos + " " + pos_x);
+  return pos;
+}
+this.getFrontPos = function() {
+  var pos = pos_x + x_offset + wheel_front_offset_x;
+  //console.log("back pos " + pos);
+  return pos;
+}
+
+this.frontCollide = function(other_truck) {
+  //var average_vel = this.getVel() + other_truck.getVel();
+
+  if (Math.abs(vel_y) > 0.001) {
+    vel_y = -vel_y * 0.9;
+  }
+  vel_x *= 0.9;
+  //var diff_vel = other_truck.
+  //if (Math.abs(getVel() > average_vel) {
+  //  vel_
+  //}
+  //vel_x = average_vel;
+  //max(
+}
+
+this.backCollide = function(other_truck) {
+  vel_x *= 1.1;
+}
+
 // Truck
 this.update = function() {
   
   if (vel_x < -10) {
     vel_x = -10;
   }
-  if (vel_x > 20) {
-    vel_x = 20;
+  if (vel_x > 23) {
+    vel_x = 23;
   }
   if (!off_ground) {
     vel_x *= 0.98;
@@ -387,6 +429,9 @@ this.update = function() {
     console.log(" truck pos " + pos_x);
   }
 
+  level_back_height = level.getHeight(this.getBackPos(),  pos_y);
+  level_front_height  = level.getHeight(this.getFrontPos(), pos_y);
+  var old_pos_z = pos_z;
   pos_z += vel_z;
   if (pos_z <= Math.max(level_front_height, level_back_height)) {
     //if (vel_z < 0) {
@@ -401,7 +446,7 @@ this.update = function() {
     off_ground = true;
   }
   if (off_ground) {
-    vel_z -= 0.025 * tile_size;
+    vel_z -= 0.02 * tile_size;
     //console.log(vel_z + " " + pos_z);
   }
 
@@ -410,6 +455,66 @@ this.update = function() {
   // rotation = pos_x * 2 / d ?
   wheel_front.rotation = pos_x * 2.5; //setTransform(0,0, scale, scale, pos_x); 
   wheel_back.rotation = pos_x * 2.5; //setTransform(0,0, scale, scale, pos_x); 
+
+  {
+  var wheel_offset_y = tile_size;
+
+  // TODO need a set of functions to convert between screen coordinates,
+  // pixel coords, and tile coords
+  var x_offset = tile_size * scale;
+  //var back_height = level.getHeight(this.getBackPos(),  pos_y);
+  //var front_height  = level.getHeight(this.getFrontPos(), pos_y + vel_y);
+  var truck_length = wheel_back_offset_x - wheel_front_offset_x;
+ 
+  var veh_diff = level_back_height - level_front_height;
+  //var pos_diff = Math.max(level_front_height - pos_z, level_back_height - pos_z);
+  var old_pos_diff = Math.max(level_front_height - old_pos_z, level_back_height - old_pos_z);
+  
+  //if (Math.abs(old_pos_diff) > 0) console.log(" pos diff " + old_pos_diff);
+
+  //console.log(pos_diff + " " + pos_z + " " + front_height + " " + back_height);
+  //if (pos_diff > 0) console.log(pos_diff);
+  // bounce back into same lane first
+  if ((Math.abs(vel_y) > 0.002) && (old_pos_diff > 17)) {
+      console.log("y bounce " + vel_y + " " + pos_y + " " + old_pos_diff);
+      vel_y = -vel_y * 0.9;
+      pos_y += 2*vel_y;
+    
+    pos_z = old_pos_z;
+  } else if ((Math.abs(vel_x) > 0.001) && (old_pos_diff/Math.abs(vel_x) > 2.0)) {
+    
+      console.log("x bounce " + 
+        vel_x + 
+        ", back " + level_back_height +
+        ", front " + level_front_height +
+        ", pos diff " + old_pos_diff
+        );
+        vel_x = -vel_x;
+  } else if (old_pos_diff > 0) {
+    if (off_ground) {
+      //vel_z += (old_pos_diff) * 0.01;
+    } else {
+      vel_z = 0.34 * (pos_z - old_pos_z);
+    }
+    //console.log("off ground " + vel_z + " " + old_pos_z + " " + level_front_height); 
+  }
+  
+  if (!off_ground) {
+    vel_x += veh_diff * 0.005;
+  }
+  //var dz_front = front_height - level_front_height; 
+  //var dz_back = back_height - level_back_height;
+  
+
+  //var height_diff = front_height - back_height;
+  //var angle = Math.atan2(-height_diff, truck_length);
+  //truck_body.rotation = angle * 180.0 / Math.PI;
+  //if (!off_ground && (truck_height > 0)) {
+  //  this.jump();
+  //}
+  
+  //pos_z = Math.max(back_height, front_height); 
+  }
  
   pos_y += vel_y;
   pos_y = Math.round(pos_y/scale) * scale;
@@ -427,51 +532,7 @@ this.update = function() {
   }
   
   this.py = pos_y;
- 
-  // TBD make wheel_front_offset_x and wheel_back_offset_x
-  var wheel_back_offset_x = 12;
-  var wheel_front_offset_x = scale * tile_size - 12;
-  var wheel_offset_y = tile_size;
 
-  // TBD why tile_size * 3?
-  // TODO need a set of functions to convert between screen coordinates,
-  // pixel coords, and tile coords
-  var x_offset = tile_size * scale;
-  var back_height = level.getHeight(pos_x + x_offset + wheel_back_offset_x,  pos_y);
-  var front_height  = level.getHeight(pos_x + x_offset + wheel_front_offset_x, pos_y);
-  var truck_length = wheel_back_offset_x - wheel_front_offset_x;
- 
-  var veh_diff = back_height - front_height;
-  var pos_diff = Math.max(front_height - pos_z, back_height - pos_z);
-  if (pos_diff > 20) {
-    // bounce back into same lane first
-    if (Math.abs(vel_y) > 0.001) {
-      vel_y = -vel_y * 0.9;
-    } else if (Math.abs(vel_x) > 0.001) {
-        vel_x = -vel_x;
-    } 
-  } else if (pos_diff > 0) {
-    vel_z += (pos_diff) * 0.2;
-    //console.log("off ground " + vel_z + " " + pos_z + " " + front_height); 
-  } 
-  
-  if (!off_ground) {
-    vel_x += veh_diff * 0.005;
-  }
-  //var dz_front = front_height - level_front_height; 
-  //var dz_back = back_height - level_back_height;
-  
-
-  level_back_height = back_height;
-  level_front_height = front_height;
-  //var height_diff = front_height - back_height;
-  //var angle = Math.atan2(-height_diff, truck_length);
-  //truck_body.rotation = angle * 180.0 / Math.PI;
-  //if (!off_ground && (truck_height > 0)) {
-  //  this.jump();
-  //}
-  
-  //pos_z = Math.max(back_height, front_height); 
   
   // px is determined by the level update
   truck_all.x = this.px;
@@ -535,8 +596,8 @@ function handleComplete() {
   all_trucks.push(truck);
 
   // make rows of cpu trucks
-  for (var i = 0; i < 3; i++) {
-  for (var j = 0; j < 3; j++) {
+  for (var i = 0; i < 0; i++) {
+  for (var j = 0; j < 1; j++) {
     var cpu_truck = new Truck();
     cpu_truck.init("truck_cpu", -j * tile_size * scale, (i + 1) * tile_size * scale);
     cpu_truck.cpu_aggression = 0.1 + Math.random() * 0.7;
@@ -555,6 +616,22 @@ function handleComplete() {
 function tick(event) {
 
   for (var i = 0; i < all_trucks.length; i++) { 
+    // look for collisions
+    for (var j = 0; j < all_trucks.length; j++) { 
+      if (i === j) continue;
+      if ((Math.abs(all_trucks[i].getPosY() - all_trucks[j].getPosY()) < tile_size/2) &&
+          (all_trucks[i].getFrontPos() > all_trucks[j].getBackPos()) &&
+          (all_trucks[i].getFrontPos() < all_trucks[j].getFrontPos())
+          ) {
+        console.log("collision " + i + " " + j + " " + 
+            all_trucks[i].getFrontPos() + 
+            ", " + all_trucks[j].getFrontPos()
+            );
+        all_trucks[i].frontCollide(all_trucks[j]); 
+        all_trucks[j].backCollide(all_trucks[i]); 
+      }
+    }
+
     if (all_trucks[i].is_cpu) {
       all_trucks[i].autoDrive();
     }
