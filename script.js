@@ -9,7 +9,9 @@ var KEYCODE_RIGHT = 39;
 
 var scale = 2;
 
+// TODO belongs in Level?
 var stage;
+
 var wd;
 var ht;
 
@@ -118,6 +120,10 @@ function Jump(scale, tileW, x, y) {
 ///////////////////////////////////////////////////////////////////////////////
 function Level() {
 
+// containers for each lane of travel,
+// allows depth to be handled correctly
+var lanes;
+
 //var level = {};
 // level, TODO encapsulate
 var mud;
@@ -157,6 +163,8 @@ function random() {
   return x - Math.floor(x);
 }
 
+var num_lanes = 10;
+
 this.init = function() {
   mud_img = loader.getResult("mud");
   //mud_img.scaleX = 4;
@@ -171,34 +179,40 @@ this.init = function() {
 
   stage.addChild(mud); 
 
-  features = [];
+  lanes = [];
+  for (var i = 0; i < num_lanes; i++) {
+    var lane = new createjs.Container(); 
+    stage.addChild(lane);
+    lanes.push(lane);
+  }
 
+  features = [];
   // start line
-  for (var i = 1; i < 10; i++) {
+  for (var i = 0; i < num_lanes; i++) {
     var feature = new Feature(scale, mud.tileW, 5, i, "checkers");
     features.push(feature);
-    stage.addChild(feature.img);
+    lanes[i].addChild(feature.img);
   } 
   // finish line
-  for (var i = 0; i < 10; i++) {
+  for (var i = 0; i < num_lanes; i++) {
     var feature = new Feature(scale, mud.tileW, 5 + this.level_length, i, "checkers");
     features.push(feature);
-    stage.addChild(feature.img);
+    lanes[i].addChild(feature.img);
   }
 
   // TODO instead load a bitmap or text file that specifies where features are
   for (var i = 0; i < 25; i++) {
     var x = Math.floor( 5 + random() * this.level_length - 10);
-    var y =  i % 5; //Math.floor(Math.random() * 5 + 1);
+    var y =  i % num_lanes; //Math.floor(Math.random() * 5 + 1);
     var jump = new Jump(scale, mud.tileW, x, y);
     features.push(jump);
     console.log("feature " + jump.x + " " + jump.y);
-    stage.addChild(jump.img);
+    lanes[y].addChild(jump.img);
     
     var reverse_jump = new ReverseJump(scale, mud.tileW, x + 1, y);
     features.push(reverse_jump);
     console.log("feature reverse_jump " + reverse_jump.x + " " + reverse_jump.y);
-    stage.addChild(reverse_jump.img);
+    lanes[y].addChild(reverse_jump.img);
   }
 }
 
