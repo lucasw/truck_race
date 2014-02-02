@@ -122,7 +122,7 @@ function Level() {
 
 // containers for each lane of travel,
 // allows depth to be handled correctly
-var lanes;
+this.lanes;
 
 //var level = {};
 // level, TODO encapsulate
@@ -163,7 +163,7 @@ function random() {
   return x - Math.floor(x);
 }
 
-var num_lanes = 10;
+var num_lanes = 9;
 
 this.init = function() {
   mud_img = loader.getResult("mud");
@@ -179,25 +179,26 @@ this.init = function() {
 
   stage.addChild(mud); 
 
-  lanes = [];
+  this.lanes = [];
   for (var i = 0; i < num_lanes; i++) {
     var lane = new createjs.Container(); 
     stage.addChild(lane);
-    lanes.push(lane);
+    this.lanes.push(lane);
   }
 
   features = [];
   // start line
   for (var i = 0; i < num_lanes; i++) {
-    var feature = new Feature(scale, mud.tileW, 5, i, "checkers");
+    // TODO fix the i + 1
+    var feature = new Feature(scale, mud.tileW, 5, i + 1, "checkers");
     features.push(feature);
-    lanes[i].addChild(feature.img);
+    this.lanes[i].addChild(feature.img);
   } 
   // finish line
   for (var i = 0; i < num_lanes; i++) {
-    var feature = new Feature(scale, mud.tileW, 5 + this.level_length, i, "checkers");
+    var feature = new Feature(scale, mud.tileW, 5 + this.level_length, i + 1, "checkers");
     features.push(feature);
-    lanes[i].addChild(feature.img);
+    this.lanes[i].addChild(feature.img);
   }
 
   // TODO instead load a bitmap or text file that specifies where features are
@@ -207,12 +208,17 @@ this.init = function() {
     var jump = new Jump(scale, mud.tileW, x, y);
     features.push(jump);
     console.log("feature " + jump.x + " " + jump.y);
-    lanes[y].addChild(jump.img);
+    this.lanes[y].addChild(jump.img);
     
     var reverse_jump = new ReverseJump(scale, mud.tileW, x + 1, y);
     features.push(reverse_jump);
     console.log("feature reverse_jump " + reverse_jump.x + " " + reverse_jump.y);
-    lanes[y].addChild(reverse_jump.img);
+    this.lanes[y].addChild(reverse_jump.img);
+  }
+
+  // walls
+  for (var i = 0; i < 10; i++) {
+    // TODO need to be able to check for existing features
   }
 }
 
@@ -582,7 +588,6 @@ this.update = function() {
   pos_y += vel_y;
   pos_y = Math.round(pos_y/scale) * scale;
 
-  // complete turn when in new lane
   if (Math.round(pos_y/max_vel_y) % (tile_size/2 * scale/max_vel_y) == 0) {
     vel_y = 0;
   }
@@ -590,8 +595,12 @@ this.update = function() {
   if (pos_y < 0) {
     pos_y = 0;
   }
-  if (pos_y > ht - tile_size * 3) {
-    pos_y = ht - tile_size * 3;
+  
+  var cur_lane = (pos_y / (tile_size));
+  // complete turn when in new lane
+  console.log("cur lane " + cur_lane);
+  if (cur_lane > (level.lanes.length - 1)) {
+    pos_y = (level.lanes.length - 1) * tile_size;
   }
   
   this.py = pos_y;
@@ -660,7 +669,7 @@ function handleComplete() {
 
   // make rows of cpu trucks
   for (var i = 0; i < 3; i++) {
-  for (var j = 0; j < 8; j++) {
+  for (var j = 0; j < 0; j++) {
     var cpu_truck = new Truck();
     cpu_truck.init("truck_cpu", -j * tile_size * scale * 1.2, (i + 1) * tile_size * scale);
     cpu_truck.cpu_aggression = 0.1 + Math.random() * 0.7;
