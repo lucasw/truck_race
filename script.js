@@ -96,8 +96,6 @@ function Feature(scale, tileW, x, y, name) {
 function Barrier(scale, tileW, x, y) {
      
   var that = new Feature(scale, tileW, x, y, "barrier");         
-  that.img.scaleX = -that.img.scaleX;
-  that.x_offset = tileW;
   that.getHeight = function(x) {
     return that.tileW;
   }
@@ -105,6 +103,15 @@ function Barrier(scale, tileW, x, y) {
   return that;
 }
 
+function Boost(scale, tileW, x, y) {
+     
+  var that = new Feature(scale, tileW, x, y /*+ tile_size*/, "boost");         
+  that.getHeight = function(x) {
+    return 0;
+  }
+  
+  return that;
+}
 function ReverseJump(scale, tileW, x, y) {
      
   var that = new Feature(scale, tileW, x, y, "ramp");         
@@ -215,7 +222,7 @@ this.init = function() {
 
   // TODO instead load a bitmap or text file that specifies where features are
   for (var i = 0; i < 25; i++) {
-    var x = Math.floor( 5 + random() * this.level_length - 10);
+    var x = Math.floor( 8 + random() * (this.level_length - 10));
     var y =  i % num_lanes; //Math.floor(Math.random() * 5 + 1);
     var jump = new Jump(scale, mud.tileW, x, y);
     features.push(jump);
@@ -227,10 +234,20 @@ this.init = function() {
     console.log("feature reverse_jump " + reverse_jump.x + " " + reverse_jump.y);
     this.lanes[y].addChild(reverse_jump.img);
   }
+  // boosts
+  for (var i = 0; i < 20; i++) {
+    var x = Math.floor( 10 + random() * (this.level_length - 10));
+    var y =  i % num_lanes; //Math.floor(Math.random() * 5 + 1);
+    // TODO need to be able to check for existing features
+    var reverse_jump = new Boost(scale, mud.tileW, x, y);
+    features.push(reverse_jump);
+    console.log("feature reverse_jump " + reverse_jump.x + " " + reverse_jump.y);
+    this.lanes[y].addChild(reverse_jump.img);
 
+  }
   // walls
   for (var i = 0; i < 20; i++) {
-    var x = Math.floor( 20 + random() * this.level_length - 20);
+    var x = Math.floor( 20 + (random() * this.level_length - 20));
     var y =  i % num_lanes; //Math.floor(Math.random() * 5 + 1);
     // TODO need to be able to check for existing features
     var reverse_jump = new Barrier(scale, mud.tileW, x, y);
@@ -239,6 +256,9 @@ this.init = function() {
     this.lanes[y].addChild(reverse_jump.img);
 
   }
+
+
+
 }
 
 this.update = function() {
@@ -682,6 +702,7 @@ function init() {
   manifest = [
     {src:"assets/mud.png", id:"mud"},
     {src:"assets/barrier.png", id:"barrier"},
+    {src:"assets/boost.png", id:"boost"},
     {src:"assets/truck.png", id:"truck"},
     {src:"assets/truck_cpu.png", id:"truck_cpu"},
     {src:"assets/shadow.png", id:"shadow"},
