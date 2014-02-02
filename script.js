@@ -93,6 +93,18 @@ function Feature(scale, tileW, x, y, name) {
   }
 }
 
+function Barrier(scale, tileW, x, y) {
+     
+  var that = new Feature(scale, tileW, x, y, "barrier");         
+  that.img.scaleX = -that.img.scaleX;
+  that.x_offset = tileW;
+  that.getHeight = function(x) {
+    return that.tileW;
+  }
+  
+  return that;
+}
+
 function ReverseJump(scale, tileW, x, y) {
      
   var that = new Feature(scale, tileW, x, y, "ramp");         
@@ -217,8 +229,15 @@ this.init = function() {
   }
 
   // walls
-  for (var i = 0; i < 10; i++) {
+  for (var i = 0; i < 20; i++) {
+    var x = Math.floor( 20 + random() * this.level_length - 20);
+    var y =  i % num_lanes; //Math.floor(Math.random() * 5 + 1);
     // TODO need to be able to check for existing features
+    var reverse_jump = new Barrier(scale, mud.tileW, x, y);
+    features.push(reverse_jump);
+    console.log("feature reverse_jump " + reverse_jump.x + " " + reverse_jump.y);
+    this.lanes[y].addChild(reverse_jump.img);
+
   }
 }
 
@@ -662,6 +681,7 @@ function init() {
 
   manifest = [
     {src:"assets/mud.png", id:"mud"},
+    {src:"assets/barrier.png", id:"barrier"},
     {src:"assets/truck.png", id:"truck"},
     {src:"assets/truck_cpu.png", id:"truck_cpu"},
     {src:"assets/shadow.png", id:"shadow"},
