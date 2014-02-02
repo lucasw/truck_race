@@ -350,13 +350,18 @@ this.turnRight = function() {
     vel_y = max_vel_y;
 }
 
+var old_lane = 0;
+
+// Truck
 this.init = function(truck_image, x, y) {
   
   pos_x = x;
   pos_y = y;
 
   truck_all = new createjs.Container();
-  stage.addChild(truck_all);
+
+  var cur_lane = Math.round(this.getLane());
+  level.lanes[cur_lane].addChild(truck_all);
   
   var shadow1 = new createjs.Bitmap(loader.getResult("shadow"));
   shadow1.scaleX = scale;
@@ -470,6 +475,10 @@ this.frontCollide = function(other_truck) {
 this.backCollide = function(other_truck) {
   vel_x *= 1.1;
   vel_x += 6.0;
+}
+
+this.getLane = function() {
+  return (pos_y / (tile_size));
 }
 
 // Truck
@@ -596,11 +605,23 @@ this.update = function() {
     pos_y = 0;
   }
   
-  var cur_lane = (pos_y / (tile_size));
   // complete turn when in new lane
-  console.log("cur lane " + cur_lane);
-  if (cur_lane > (level.lanes.length - 1)) {
+  //console.log("cur lane " + this.getLane());
+  if (this.getLane() > (level.lanes.length - 1)) {
     pos_y = (level.lanes.length - 1) * tile_size;
+  }
+  var cur_lane = Math.round(this.getLane());
+  if (cur_lane < 0) {
+    console.log("lane error " + cur_lane);
+    cur_lane = 0;
+  }
+  if (cur_lane >= level.num_lanes) {
+    console.log("lane error " + cur_lane);
+    cur_lane = level.num_lanes - 1;
+  }
+  if (cur_lane != old_lane) {
+    level.lanes[old_lane].removeChild(truck_all);
+    level.lanes[cur_lane].addChild(truck_all);
   }
   
   this.py = pos_y;
@@ -620,6 +641,8 @@ this.update = function() {
   // truck_body.x + r*cos(handle_wheel_front_angle + angle) = wheel_front_offset_x
   truck_body.y = -pos_z;
 
+  var cur_lane = Math.round(this.getLane());
+  old_lane = cur_lane;
 } // update
 
 } // Truck
@@ -669,7 +692,7 @@ function handleComplete() {
 
   // make rows of cpu trucks
   for (var i = 0; i < 3; i++) {
-  for (var j = 0; j < 0; j++) {
+  for (var j = 0; j < 6; j++) {
     var cpu_truck = new Truck();
     cpu_truck.init("truck_cpu", -j * tile_size * scale * 1.2, (i + 1) * tile_size * scale);
     cpu_truck.cpu_aggression = 0.1 + Math.random() * 0.7;
