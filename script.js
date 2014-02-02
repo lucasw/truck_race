@@ -88,7 +88,6 @@ function Feature(scale, tileW, x, y, name) {
 
   // x is in tile pixel coords (not screen pixel coords?)
   this.getHeight = function(x) {
-
     return 0;
   }
 }
@@ -107,7 +106,7 @@ function Boost(scale, tileW, x, y) {
      
   var that = new Feature(scale, tileW, x, y /*+ tile_size*/, "boost");         
   that.getHeight = function(x) {
-    return 0;
+    return -2;
   }
   
   return that;
@@ -166,7 +165,6 @@ this.getHeight = function(t_x, t_y) {
   //console.log("pos " + Math.round(t_x) + " " + t_y + ", " + x + " " + y);
   for (var i = 0; i < features.length; i++) {
     if ((x === features[i].x) && (y === features[i].y)) {
-      // this assumes every feature is a jump with a slope of 1
       var height = features[i].getHeight(t_x - x * tile_size);
       //console.log("height " + height);
       return height;
@@ -235,7 +233,7 @@ this.init = function() {
     this.lanes[y].addChild(reverse_jump.img);
   }
   // boosts
-  for (var i = 0; i < 20; i++) {
+  for (var i = 0; i < 25; i++) {
     var x = Math.floor( 10 + random() * (this.level_length - 10));
     var y =  i % num_lanes; //Math.floor(Math.random() * 5 + 1);
     // TODO need to be able to check for existing features
@@ -375,8 +373,9 @@ this.accelerate = function() {
 }
 
 this.brake = function() {
-  if (!off_ground)
+  if (!off_ground && (vel_x > -15))
     vel_x -= 2;
+
 }
 
 this.turnLeft = function() {
@@ -523,11 +522,11 @@ this.getLane = function() {
 // Truck
 this.update = function() {
   
-  if (vel_x < -10) {
-    vel_x = -10;
+  if (vel_x < -30) {
+    vel_x = -30;
   }
-  if (vel_x > 23) {
-    vel_x = 23;
+  if (vel_x > 30) {
+    vel_x = 30;
   }
   if (!off_ground) {
     vel_x *= 0.98;
@@ -618,6 +617,12 @@ this.update = function() {
   
   if (!off_ground) {
     vel_x += veh_diff * 0.005;
+  }
+
+  // TODO hacky
+  if ((level_front_height < 0) || (level_back_height < 0)) {
+    console.log("boost");
+    vel_x += 4;
   }
   //var dz_front = front_height - level_front_height; 
   //var dz_back = back_height - level_back_height;
