@@ -20,7 +20,47 @@ var manifest;
 var level;
 var wrap = false;
 
+var key_ctrl = false;
+var key_up = false;
+var key_down = false;
+var key_left = false;
+var key_right = false;
+
 document.onkeydown = handleKeyDown;
+document.onkeyup = handleKeyUp;
+
+function handleKeyDown(e) {
+  // cross browse issue?
+  if (!e) { var e = window.event; }
+  handleKey(e, true);
+}
+
+function handleKeyUp(e) {
+  // cross browse issue?
+  if (!e) { var e = window.event; }
+  handleKey(e, false);
+}
+
+function handleKey(e, val) {
+  switch (e.keyCode) {
+    case KEYCODE_CTRL:
+      //truck.jump();
+      key_ctrl = val;
+      return false;
+    case KEYCODE_LEFT:
+      key_left = val;
+      return false;
+    case KEYCODE_RIGHT:
+      key_right = val;
+      return false;
+   case KEYCODE_UP:
+      key_up = val;
+      return false;
+   case KEYCODE_DOWN:
+      key_down = val;
+      return false;
+  }
+}
 
 // x and y are in tile coords
 function Feature(scale, tileW, x, y, name) {
@@ -624,6 +664,16 @@ function handleComplete() {
 
 function tick(event) {
 
+
+  if (key_left)
+    truck.brake();
+  if (key_right)
+    truck.accelerate();
+  if (key_up)
+    truck.turnLeft();
+  if (key_down)
+    truck.turnRight();
+
   for (var i = 0; i < all_trucks.length; i++) { 
     // look for collisions
     for (var j = 0; j < all_trucks.length; j++) { 
@@ -651,31 +701,5 @@ function tick(event) {
   level.update();
 
   stage.update(event);
-}
-
-
-function handleKeyDown(e) {
-  // cross browse issue?
-  if (!e) { var e = window.event; }
-
-  var step = scale;
-  switch (e.keyCode) {
-    case KEYCODE_CTRL:
-      truck.jump();
-      return false;
-    case KEYCODE_LEFT:
-      truck.brake()
-      return false;
-    case KEYCODE_RIGHT:
-      truck.accelerate();
-      return false;
-   case KEYCODE_UP:
-      truck.turnLeft();
-      return false;
-   case KEYCODE_DOWN:
-      truck.turnRight();
-      return false;
-  }
- 
 }
 
