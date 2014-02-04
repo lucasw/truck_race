@@ -5,6 +5,9 @@ var paused = true;
 var show_title = true;
 var title_image;
 
+var timer;
+var timer_seconds = 0;
+
 var KEYCODE_CTRL = 74;
 var KEYCODE_UP = 38;                
 var KEYCODE_DOWN = 40;                
@@ -759,6 +762,12 @@ function handleComplete() {
   }
   }
 
+  timer = new createjs.Text(timer_seconds, "12px Courier", "#FFF");
+  timer.scaleX = 6;
+  timer.scaleY = 6;
+  timer.x = wd - 200;
+  stage.addChild(timer);
+
   // setup title screen
   title_image = new createjs.Bitmap(loader.getResult("title"));
   title_image.scaleX = ht/64;
@@ -784,6 +793,9 @@ function tick(event) {
     truck.turnLeft();
   if (key_down)
     truck.turnRight();
+
+  timer_seconds += 1.0/15.0;
+  timer.text = timer_seconds;
 
   for (var i = 0; i < all_trucks.length; i++) { 
     // look for collisions
