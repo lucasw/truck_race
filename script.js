@@ -1,6 +1,10 @@
 // Copyright Lucas Walter 2013
 // GNU GPL 3.0
 
+var paused = true;
+var show_title = true;
+var title_image;
+
 var KEYCODE_CTRL = 74;
 var KEYCODE_UP = 38;                
 var KEYCODE_DOWN = 40;                
@@ -32,6 +36,13 @@ document.onkeydown = handleKeyDown;
 document.onkeyup = handleKeyUp;
 
 function handleKeyDown(e) {
+  
+  if (show_title) {
+    show_title = false;
+    stage.removeChild(title_image);
+    paused = false;
+  }
+  
   // cross browse issue?
   if (!e) { var e = window.event; }
   handleKey(e, true);
@@ -705,6 +716,7 @@ function init() {
   context.webkitImageSmoothingEnabled = false;
 
   manifest = [
+    {src:"assets/title.png", id:"title"},
     {src:"assets/mud.png", id:"mud"},
     {src:"assets/barrier.png", id:"barrier"},
     {src:"assets/boost.png", id:"boost"},
@@ -722,13 +734,13 @@ function init() {
 }
 
 
-var scene_graph;
-
 function handleComplete() {
+  
+  
+
   level = new Level();
   level.init();  
 
-  scene_graph = new createjs.Container();
  
   truck = new Truck();
   truck.is_cpu = false;
@@ -747,6 +759,13 @@ function handleComplete() {
   }
   }
 
+  // setup title screen
+  title_image = new createjs.Bitmap(loader.getResult("title"));
+  title_image.scaleX = ht/64;
+  title_image.scaleY = ht/64;
+  title_image.x = (wd - ht)/2.0;
+  stage.addChild(title_image); 
+ 
   stage.update();
 
   createjs.Ticker.on("tick", tick);
@@ -756,7 +775,7 @@ function handleComplete() {
 
 function tick(event) {
 
-
+  if (!paused) {
   if (key_left)
     truck.brake();
   if (key_right)
@@ -791,6 +810,7 @@ function tick(event) {
   }
 
   level.update();
+  }
 
   stage.update(event);
 }
