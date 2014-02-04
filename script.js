@@ -4,6 +4,7 @@
 var paused = true;
 var show_title = true;
 var title_image;
+var finished_level = false;
 
 var timer;
 var timer_seconds = 0;
@@ -635,7 +636,7 @@ this.update = function() {
 
   // TODO hacky
   if ((level_front_height < 0) || (level_back_height < 0)) {
-    console.log("boost");
+    //console.log("boost");
     vel_x += 4;
   }
   //var dz_front = front_height - level_front_height; 
@@ -701,6 +702,8 @@ this.update = function() {
 
   var cur_lane = Math.round(this.getLane());
   old_lane = cur_lane;
+
+  
 } // update
 
 } // Truck
@@ -738,12 +741,9 @@ function init() {
 
 
 function handleComplete() {
-  
-  
 
   level = new Level();
   level.init();  
-
  
   truck = new Truck();
   truck.is_cpu = false;
@@ -794,8 +794,10 @@ function tick(event) {
   if (key_down)
     truck.turnRight();
 
-  timer_seconds += 1.0/15.0;
-  timer.text = timer_seconds;
+  if (!finished_level) {
+    timer_seconds += 1.0/15.0;
+    timer.text = timer_seconds;
+  }
 
   for (var i = 0; i < all_trucks.length; i++) { 
     // look for collisions
@@ -805,11 +807,13 @@ function tick(event) {
           (all_trucks[i].getFrontPos() > all_trucks[j].getBackPos()) &&
           (all_trucks[i].getFrontPos() < all_trucks[j].getFrontPos())
           ) {
+        if (false) {
         console.log("collision " + i + " " + j + " " + 
             all_trucks[i].getFrontPos() + 
             ", " + all_trucks[j].getFrontPos() +
             ", y " + all_trucks[i].getPosY() + " " + all_trucks[j].getPosY()
             );
+            }
         all_trucks[i].frontCollide(all_trucks[j]); 
         all_trucks[j].backCollide(all_trucks[i]); 
       }
@@ -819,6 +823,12 @@ function tick(event) {
       all_trucks[i].autoDrive();
     }
     all_trucks[i].update();
+  }
+  
+  console.log("pos_x " + truck.getPos() + " " + level.level_length * tile_size);
+  if (!finished_level && (truck.getPos() > level.level_length * tile_size)) {
+    console.log("finished " + truck.getPos() + " " + level.level_length);
+    finished_level = true;
   }
 
   level.update();
