@@ -405,6 +405,9 @@ this.turnRight = function() {
 
 var old_lane = 0;
 
+// position in level shown on the bottom of the screen
+this.pos_indicator;
+
 // Truck
 this.init = function(truck_image, x, y) {
   
@@ -471,6 +474,14 @@ this.init = function(truck_image, x, y) {
   x_offset = tile_size * scale;
   wheel_back_offset_x = 12;
   wheel_front_offset_x = scale * tile_size - 12;
+
+  this.pos_indicator = new createjs.Shape(); //Rectangle(0, 0, 3, 2);
+  this.pos_indicator.graphics.beginStroke("#555");
+  this.pos_indicator.graphics.beginFill("#666").drawRect(0, 0, 10, 40);
+  this.pos_indicator.x = 0;
+  this.pos_indicator.y = ht - 40;
+  stage.addChild(this.pos_indicator);
+
 } // init
 
 // if the car is a cpu use these
@@ -703,7 +714,7 @@ this.update = function() {
   var cur_lane = Math.round(this.getLane());
   old_lane = cur_lane;
 
-  
+  this.pos_indicator.x = wd/4 + pos_x / (level.level_length * tile_size) * wd/2; 
 } // update
 
 } // Truck
@@ -748,6 +759,7 @@ function handleComplete() {
   truck = new Truck();
   truck.is_cpu = false;
   truck.init("truck", 0, 0);
+  truck.pos_indicator.graphics.beginFill("#090").drawRect(0, 0, 10, 40);
   truck.update();
   all_trucks.push(truck);
 
@@ -761,6 +773,10 @@ function handleComplete() {
     all_trucks.push(cpu_truck);
   }
   }
+
+  // bring truck indicator to front
+  stage.removeChild(truck.pos_indicator);
+  stage.addChild(truck.pos_indicator);
 
   timer = new createjs.Text(timer_seconds, "12px Courier", "#FFF");
   timer.scaleX = 6;
